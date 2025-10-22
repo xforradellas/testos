@@ -1,0 +1,44 @@
+version: '3.1'
+
+services:
+#database engine service
+  db:
+    container_name: db
+    image: mysql:8.4 # O cualquier otra imagen de DB compatible
+    ports:
+      - "3306:3306" # Mapear puerto para acceso externo si es necesario (opcional)
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password # Contraseña de root para MySQL
+      MYSQL_DATABASE: test_db            # Base de datos que usará Codeception y PdoManager en tests
+      MYSQL_USER: test_user              # Usuario para la base de datos de tests
+      MYSQL_PASSWORD: test_password      # Contraseña para el usuario de tests
+    volumes:
+      #allow *.sql, *.sql.gz, or *.sh and is execute only if data directory is empty
+      - ./dbfiles:/docker-entrypoint-initdb.d
+    healthcheck: # Comprobación de salud para asegurar que la DB está lista
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+  test:
+    build:
+      context: ./images/web
+      dockerfile: Dockerfile
+    container_name: test
+    environment:
+      COMPOSER_AUTH: '{"github-oauth": {"github.com": "${githubtoken}"}}'
+      DB_HOST: db
+      DB_NAME: test_db
+      DB_USER: test_user
+      DB_PASS: test_password
+      DB_CHARSET: utf8mb4
+    ports:
+      - 88:80
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      #allow *.sql, *.sql.gz, or *.sh and is execute only if data directory is empty
+      - ./images/web/src/:/var/www/html/src
+      - ./images/web/vendor:/var/www/html/vendor/
+      - ./images/web/composer.json:/var/www/html/composer.json

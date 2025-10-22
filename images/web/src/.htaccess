@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Si el fitxer o directori físic no existeix,
+# redirigeix totes les peticions a index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

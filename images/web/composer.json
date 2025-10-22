@@ -1,0 +1,37 @@
+{
+    "name": "ajt/testos",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ajt\\Test\\": "src/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.3"
+        }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/AjManresa/lib_debug.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/AjManresa/lib_db.git"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/AjManresa/lib_apibase.git"
+        }
+    ],
+    "require": {
+        "ajt/api-base": "^2.0.0"
+    },
+    "require-dev": {
+        "codeception/codeception": "^5.3",
+        "codeception/module-phpbrowser": "^2.0.0",
+        "codeception/module-asserts": "^2.0.0"
+    }
+}
