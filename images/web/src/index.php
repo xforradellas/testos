@@ -4,7 +4,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Ajt\ApiBase\{Response, Router, Request};
 use \Ajt\Test\controllers\HostsController;
 use \Ajt\Test\controllers\PortalsController;
-use \Ajt\ApiBase\AuthMiddleware;
+use \Ajt\ApiBase\AuthService;
 $conexio = new \Ajt\DB\ConexionsDB();
 
 $router = new Router();
@@ -13,8 +13,8 @@ $hostsCtrl = new HostsController($conexio);
 $portalsCtrl = new PortalsController($conexio);
 
 
-AuthMiddleware::init(function(array $token) {
-    print_r($token);
+AuthService::init(function(array $token) {
+//    print_r($token);
     if (!isset($token['idApp']) || $token['idApp'] !== 1) {
         Response::json(['error' => 'Requereix token (IdApp error)'], 401);
     }
@@ -45,8 +45,8 @@ $router->register('GET', '/portals/{id}/hosts/{idhost}', [$hostsCtrl, 'getById']
     'permission' => "portal",
     'permission_validator' => function($request, $matches) {
         // Validar dos permisos distintos:
-        $okPortal = AuthMiddleware::hasPermission('portal', $matches['id'] ?? null);
-        $okHost   = AuthMiddleware::hasPermission('portalroot', $matches['idhost'] ?? null);
+        $okPortal = AuthService::hasPermission('portal', $matches['id'] ?? null);
+        $okHost   = AuthService::hasPermission('portalroot', $matches['idhost'] ?? null);
 
         return $okPortal && $okHost;
 }]);
@@ -56,8 +56,8 @@ $router->register('GET', '/portals/{id}/plantilles', [$hostsCtrl, 'getAll'],[
     'permission' => "portal",
     'permission_validator' => function($request, $matches) {
         // Validar dos permisos distintos:
-        $okPortal = AuthMiddleware::hasPermission('portal', $matches['id'] ?? null);
-        $okHost   = AuthMiddleware::hasPermission('plantilles', $matches['id'] ?? null);
+        $okPortal = AuthService::hasPermission('portal', $matches['id'] ?? null);
+        $okHost   = AuthService::hasPermission('plantilles', $matches['id'] ?? null);
 
         return $okPortal && $okHost;
     }]);
