@@ -15,6 +15,10 @@
     "repositories": [
         {
             "type": "vcs",
+            "url": "https://github.com/AjManresa/lib_cache.git"
+        },
+        {
+            "type": "vcs",
             "url": "https://github.com/AjManresa/lib_debug.git"
         },
         {

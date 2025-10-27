@@ -1,9 +1,11 @@
 FROM php:8.3-apache
 
+RUN apt update -yqq && apt install --no-install-recommends -y unzip && apt-get clean
+
 RUN docker-php-ext-install pdo_mysql
 
-
-RUN apt update -yqq && apt install --no-install-recommends -y unzip && apt-get clean
+RUN pecl install redis-5.3.7 \
+    && docker-php-ext-enable redis
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

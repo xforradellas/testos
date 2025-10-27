@@ -17,29 +17,30 @@ class HostsController extends BaseController {
         parent::__construct($db);
     }
     public function getAll(Request $req) {
-        Response::json(HostsService::getAll());
+        return HostsService::getAll();
     }
 
     public function getById(Request $req, $params) {
         $id = $params['id'] ?? null;
-        Response::json(HostsService::find($id));
+        return HostsService::find($id);
     }
 
     public function create(Request $req) {
         unset($req->body['obj']['id_portal']);
-        Response::json(HostsService::create($req->body['obj']));
+        return HostsService::create($req->body['obj']);
     }
 
     public function update(Request $req, $params) {
         $id = $params['id'] ?? null;
         unset($req->body['obj']['id_portal']);
 
-        Response::json(HostsService::update($id,$req->body['obj']));
+        return HostsService::update($id,$req->body['obj']);
     }
 
     public function delete(Request $req, $params) {
         $id = $params['id'] ?? null;
         HostsService::delete($id);
+        return true;
     }
 
     public function deleteUpdate(Request $req, $params) {
@@ -51,6 +52,6 @@ class HostsController extends BaseController {
                 'idioma' => 'eliminat'
             ]
         ];
-        Response::json(HostsService::update($id,$req->body['obj']));
+        return HostsService::update($id,$req->body['obj']);
     }
 }

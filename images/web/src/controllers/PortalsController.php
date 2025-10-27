@@ -19,23 +19,24 @@ class PortalsController extends BaseController {
     }
 
     public function getAll(Request $req) {
-        Response::json(PortalsService::getAll());
+        return PortalsService::getAll();
     }
 
     public function create(Request $req) {
 
-        Response::json(PortalsService::create($req->body['obj']));
+        return PortalsService::create($req->body['obj']);
     }
 
     public function update(Request $req, $params) {
         $id = $params['id'] ?? null;
 
-        Response::json(PortalsService::update($id,$req->body['obj']));
+        return PortalsService::update($id,$req->body['obj']);
     }
 
     public function delete(Request $req, $params) {
         $id = $params['id'] ?? null;
         PortalsService::delete($id);
+        return true;
     }
 
 
@@ -47,6 +48,6 @@ class PortalsController extends BaseController {
         // Obtener hosts usando la lógica de negocio
         $user = $req->user ?? []; // info del usuario autenticado
         $portal->hosts = HostsService::findHostsWithRules($portal->id, $user);
-        Response::json($portal);
+        return $portal;
     }
 }
