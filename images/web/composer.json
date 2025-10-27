@@ -14,6 +14,10 @@
     },
     "repositories": [
         {
+          "type": "vcs",
+          "url": "https://github.com/AjManresa/lib_auth.git"
+        },
+        {
             "type": "vcs",
             "url": "https://github.com/AjManresa/lib_cache.git"
         },

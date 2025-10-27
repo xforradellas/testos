@@ -21,7 +21,7 @@ class HostsController extends BaseController {
     }
 
     public function getById(Request $req, $params) {
-        $id = $params['id'] ?? null;
+        $id = $params['idhost'] ?? null;
         return HostsService::find($id);
     }
 

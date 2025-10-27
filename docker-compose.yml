@@ -42,6 +42,7 @@ services:
       DB_PASS: test_password
       DB_CHARSET: utf8mb4
       REDIS_HOST: 'redis'
+      JWT_URL: 'https://web.manresa.cat/api/usuaris/public_cert.php'
     ports:
       - 88:80
     depends_on:
