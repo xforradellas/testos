@@ -24,7 +24,9 @@ AuthService::init(function(array $token) {
 // Definició de rutes (estructura jeràrquica)
 // hosts
 $router->register('GET', '/hosts', [$hostsCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
-$router->register('GET', '/hosts/{id}', [$hostsCtrl, 'getById'],['cache' => true,'cache_ttl' => 60]);
+$router->register('GET', '/hosts/@all', [$hostsCtrl, 'getAll']);
+$router->register('GET', '/hosts/@all/{id}', [$hostsCtrl, 'getById']);
+$router->register('GET', '/hosts/{id}', [$hostsCtrl, 'getById']);
 $router->register('POST', '/hosts', [$hostsCtrl, 'create']);
 $router->register('PUT', '/hosts/{id}', [$hostsCtrl, 'update']);
 $router->register('DELETE', '/hosts/{id}', [$hostsCtrl, 'deleteUpdate']);
