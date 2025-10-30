@@ -1,29 +1,37 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Ajt\ApiBase\{Response, Router, Request};
-use \Ajt\Test\controllers\HostsController;
-use \Ajt\Test\controllers\PortalsController;
+use \Ajt\Test\pub\controllers\HostsController;
+use \Ajt\Test\pub\controllers\PortalsController;
 use \Ajt\ApiBase\AuthService;
+
 $conexio = new \Ajt\DB\ConexionsDB();
 
-$router = new Router();
+
 $request = new Request();
 $hostsCtrl = new HostsController($conexio);
 $portalsCtrl = new PortalsController($conexio);
 
+$tokenValidation = function(array $token) {
 
-AuthService::init(function(array $token) {
-//    print_r($token);
     if (!isset($token['idApp']) || $token['idApp'] !== 1) {
         Response::json(['error' => 'Requereix token (IdApp error)'], 401);
     }
     return true;
-});
+};
+
+$auth = new AuthService($tokenValidation);
+
+$router = new Router($auth);
 
 // Definició de rutes (estructura jeràrquica)
 // hosts
-$router->register('GET', '/hosts', [$hostsCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
+$router->register('GET', '/pub/portals', [$portalsCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
+$router->register('GET', '/pub/portals/{id}', [$portalsCtrl, 'getById'],['cache' => true,'cache_ttl' => 60]);
+
+
+/*
 $router->register('GET', '/hosts/@all', [$hostsCtrl, 'getAll']);
 $router->register('GET', '/hosts/@all/{id}', [$hostsCtrl, 'getById']);
 $router->register('GET', '/hosts/{id}', [$hostsCtrl, 'getById']);
@@ -45,10 +53,10 @@ $router->register('DELETE', '/portals/{id}', [$portalsCtrl, 'delete']);
 $router->register('GET', '/portals/{id}/hosts/{idhost}', [$hostsCtrl, 'getById'],[
     'auth' => true,
     'permission' => "portal",
-    'permission_validator' => function($request, $matches) {
+    'permission_validator' => function($request, $matches) use ($auth) {
         // Validar dos permisos distintos:
-        $okPortal = AuthService::hasPermission('portal', $matches['id'] ?? null);
-        $okHost   = AuthService::hasPermission('portalroot', $matches['idhost'] ?? null);
+        $okPortal = $auth->hasPermission('portal', $matches['id'] ?? null);
+        $okHost   = $auth->hasPermission('portalroot', $matches['idhost'] ?? null);
 
         return $okPortal && $okHost;
 }]);
@@ -56,13 +64,13 @@ $router->register('GET', '/portals/{id}/hosts/{idhost}', [$hostsCtrl, 'getById']
 $router->register('GET', '/portals/{id}/plantilles', [$hostsCtrl, 'getAll'],[
     'auth' => true,
     'permission' => "portal",
-    'permission_validator' => function($request, $matches) {
+    'permission_validator' => function($request, $matches) use ($auth) {
         // Validar dos permisos distintos:
-        $okPortal = AuthService::hasPermission('portal', $matches['id'] ?? null);
-        $okHost   = AuthService::hasPermission('plantilles', $matches['id'] ?? null);
+        $okPortal = $auth->hasPermission('portal', $matches['id'] ?? null);
+        $okHost   = $auth->hasPermission('plantilles', $matches['id'] ?? null);
 
         return $okPortal && $okHost;
     }]);
-
+*/
 // Llança el router
 $router->dispatch($request);

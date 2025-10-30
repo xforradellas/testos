@@ -1,46 +1,50 @@
 <?php
-namespace Ajt\Test\controllers;
+namespace Ajt\Test\pub\controllers;
 
 use Ajt\ApiBase\BaseController;
 use Ajt\ApiBase\Request;
-use Ajt\ApiBase\Response;
 use Ajt\DB\ConexionsDB;
-
-use Ajt\Test\models\HostsModel;
-use Ajt\Test\services\HostsService;
+use Ajt\Test\pub\services\HostsService;
 
 
 class HostsController extends BaseController {
-    protected string $modelClass = HostsModel::class;
-    public function __construct(ConexionsDB $db = null)
+
+
+    public function __construct(?ConexionsDB $db = null,object $service = null)
     {
-        parent::__construct($db);
+        parent::__construct($service ?? new HostsService($db));
     }
     public function getAll(Request $req) {
-        return HostsService::getAll();
+        $resultat = $this->service->getAll();
+        return [
+            "dades" => $resultat,
+            "total" => sizeof($resultat)
+        ];
     }
 
     public function getById(Request $req, $params) {
         $id = $params['id'] ?? null;
-        return HostsService::find($id);
+        $resultat = $this->service->find($id);
+        return [
+            "dades" => $resultat,
+            "total" => 1
+        ];
     }
 
     public function create(Request $req) {
         unset($req->body['obj']['id_portal']);
-        return HostsService::create($req->body['obj']);
+        return $this->service->create($req->body['obj']);
     }
 
     public function update(Request $req, $params) {
         $id = $params['id'] ?? null;
         unset($req->body['obj']['id_portal']);
-
-        return HostsService::update($id,$req->body['obj']);
+        return $this->service->update($id, $req->body['obj']);
     }
 
     public function delete(Request $req, $params) {
         $id = $params['id'] ?? null;
-        HostsService::delete($id);
-        return true;
+        return $this->service->delete($id);
     }
 
     public function deleteUpdate(Request $req, $params) {
@@ -52,6 +56,6 @@ class HostsController extends BaseController {
                 'idioma' => 'eliminat'
             ]
         ];
-        return HostsService::update($id,$req->body['obj']);
+        return $this->service->update($id, $req->body['obj']);
     }
 }
