@@ -3,6 +3,7 @@
 namespace Ajt\Test\pub\services;
 
 use Ajt\ApiBase\BaseService;
+use Ajt\ApiBase\ExceptionApiBase;
 use Ajt\ApiBase\Response;
 use Ajt\DB\ConexionsDB;
 use Ajt\Test\pub\models\HostsModel;
@@ -12,10 +13,8 @@ use Ajt\Test\pub\models\PortalsVarsModel;
 
 class PortalsService extends BaseService {
 
-    // Aquí pots afegir lògica extra si cal
-    public function __construct(?ConexionsDB $db,?string $modelClass = null) {
-        parent::__construct($db,$modelClass ?? PortalsModel::class);
-    }
+    /** @var class-string<PortalsModel> */
+    protected string $modelClass = PortalsModel::class;
 
     public function getPortalByUrl(string $vUrl) {
         $aUrl=explode("/",$vUrl);
@@ -25,7 +24,7 @@ class PortalsService extends BaseService {
 
         $resultat = PortalsModel::getPortalByUrl($vUrl,$vSufix) ?? null;
         if (!$resultat) {
-            Response::json(["error" => "Portal no trobat"],404);
+            throw new ExceptionApiBase("No trobat",404);
         }
 
         return $resultat;
@@ -90,7 +89,7 @@ class PortalsService extends BaseService {
     }
 
     public function getMenus(int $idMenuPrincipal, string $idioma) {
-        $menus = new MenusService($this->db);
+        $menus = new MenusService();
         return $menus->getNodeByMenuPare($idMenuPrincipal,$idioma);
     }
 }

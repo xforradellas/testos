@@ -12,29 +12,21 @@ use \Ajt\DB\Model;
 $conexio = new \Ajt\DB\ConexionsDB();
 Model::setDefaultDb($conexio);
 
+
 $request = new Request();
-//$hostsCtrl = new HostsController();
+
+// creem els controladors que necesitem per cada petició
 $portalsCtrl = new PortalsController();
-$menusCtrl = new MenusController();
+//$menusCtrl = new MenusController($conexio);
 
-$tokenValidation = function(array $token) {
-
-    if (!isset($token['idApp']) || $token['idApp'] !== 1) {
-        Response::json(['error' => 'Requereix token (IdApp error)'], 401);
-    }
-    return true;
-};
-
-$auth = new AuthService($tokenValidation);
-
-$router = new Router($auth);
+$router = new Router();
 
 // Definició de rutes (estructura jeràrquica)
 // hosts
 $router->register('GET', '/pub/portals', [$portalsCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
 $router->register('GET', '/pub/portals/{id}', [$portalsCtrl, 'getById'],['cache' => true,'cache_ttl' => 60]);
-$router->register('GET', '/pub/portals/{id}/menus', [$menusCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
-$router->register('GET', '/pub/portals/{id}/menus/{idMenu}', [$menusCtrl, 'getById'],['cache' => true,'cache_ttl' => 60]);
+//$router->register('GET', '/pub/portals/{id}/menus', [$menusCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
+//$router->register('GET', '/pub/portals/{id}/menus/{idmenu}', [$menusCtrl, 'getById'],['cache' => true,'cache_ttl' => 60]);
 //$router->register('GET', '/pub/portals/{id}/menus/@filariadna', [$menusCtrl, 'getFilAriadna'],['cache' => true,'cache_ttl' => 60]);
 
 /*

@@ -12,17 +12,12 @@ class PortalsModel extends Model
     public int $id;
     public ?string $titol;
     public ?int $actiu;
-
     public ?string $web_dir;
     public ?string $meta_description;
     public ?int $id_menu_principal;
     public ?int $mides_img_fons;
     public ?string $mides_img_default;
     public ?string $version_admin;
-
-    // camps vista
-    public ?string $hostTipus;
-    public ?string $idioma;
 
     // llistats
     public ?array $vars;
@@ -33,7 +28,7 @@ class PortalsModel extends Model
         return new self($db);
     }
 
-    public static function getPortalByUrl(string $vHost,string $vSufix)
+    public static function getPortalByUrl(string $vHost,string $vSufix): object
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -50,6 +45,6 @@ class PortalsModel extends Model
             ],
         ];
 
-        return self::fromArray($instance->db->execute($aSentencies)[0][0] ?? null);
+        return (object) ($instance->db->execute($aSentencies)[0][0] ?? []);
     }
 }

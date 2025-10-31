@@ -57,8 +57,8 @@ class MenusModel extends Model
                 "query" =>
                     "SELECT
                         id,
-                        getIdSeo_f(id,getTitolByIdioma_f(id,:idioma)) as idseo,
-                        getTitolByIdioma_f(id,:idioma) as titol,
+                        getIdSeo_f(id,getTitolByIdioma_f(id,:idioma_seo)) as idseo,
+                        getTitolByIdioma_f(id,:idioma_titol) as titol,
                         IF(gestor = 'enllac',
                             2,
                             IF(gestor = 'menuCompartit',
@@ -86,13 +86,13 @@ class MenusModel extends Model
                     .$vOrdre,
                 "params" => [
                     ":menuPare" => $vMenuPare,
-                    ":idioma" => $vIdioma,
+                    ":idioma_seo" => $vIdioma,
+                    ":idioma_titol" => $vIdioma,
 
                 ]
             ]
         ];
 
-        print_r($aSentencies);
         return $instance->db->execute($aSentencies)[0];
     }
 
