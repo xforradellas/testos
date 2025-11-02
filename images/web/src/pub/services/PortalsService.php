@@ -4,12 +4,8 @@ namespace Ajt\Test\pub\services;
 
 use Ajt\ApiBase\BaseService;
 use Ajt\ApiBase\ExceptionApiBase;
-use Ajt\ApiBase\Response;
-use Ajt\DB\ConexionsDB;
-use Ajt\Test\pub\models\HostsModel;
-use Ajt\Test\pub\models\PortalsI18nModel;
+use Ajt\Test\pub\models\MenusModel;
 use Ajt\Test\pub\models\PortalsModel;
-use Ajt\Test\pub\models\PortalsVarsModel;
 
 class PortalsService extends BaseService {
 
@@ -31,7 +27,7 @@ class PortalsService extends BaseService {
     }
 
     public function getVarsByIdPortal(int $idPortal) {
-        $resultat = PortalsVarsModel::getVarsByIdPortal($idPortal);
+        $resultat = PortalsModel::getVarsByIdPortal($idPortal);
         foreach($resultat as $kObj => $aObj) {
             // treiem vars velles
             switch($aObj['name'] ?? '') {
@@ -50,9 +46,7 @@ class PortalsService extends BaseService {
                 case "article":
                 case "menu":
                     try {
-//                        $resultat[$kObj]['content'] = $this->getRepositori()
-//                            ->getContingut($aObj['value'],$aRetorn['idioma'],0) ?? "";
-                        $resultat[$kObj]['content'] = "contingut";
+                        $resultat[$kObj]['content'] = MenusModel::getContingut($aObj['value'],$resultat['idioma']) ?? "";
                     } catch (\Throwable $e) {
                         $resultat[$kObj]['error'] = $e->getMessage();
                     }
@@ -85,7 +79,7 @@ class PortalsService extends BaseService {
 
     public function getIdiomesByIdPortal(int $idPortal, string $hostTipus) {
 
-        return PortalsI18nModel::getIdiomesByPortal($idPortal,$hostTipus) ?? null;
+        return PortalsModel::getIdiomesByPortal($idPortal,$hostTipus) ?? null;
     }
 
     public function getMenus(int $idMenuPrincipal, string $idioma) {

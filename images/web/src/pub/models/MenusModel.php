@@ -136,4 +136,179 @@ class MenusModel extends Model
             $vPublicat
         ];
     }
+
+    public static function getMenu(int $vId, ?string $vIdioma = "CA")
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            "0" => [
+                "query" =>
+                    "SELECT
+                        id,
+                        getIdSeo_f(id,getTitolByIdioma_f(id,:idioma_seo)) as idseo,
+                        getTitolByIdioma_f(id,:idioma_titol) as titol,
+                        menu_pare,
+                        estaPublicat_f(id) as 'publicat',
+                        IF(gestor = 'enllac', url, '') as  url,
+                        IF(gestor = 'enllac', enllac_extern, 0) as  enllac_extern,
+                        gestor,
+                        gestor_pers,
+                        gestor_params,
+                        id_arxius,
+                        id_compartit,
+                        getMetaDescripcioByIdioma_f(id,:idioma_meta_descipcio) as meta_description,
+                        getImgFonsMenu_f(id) as url_img_fons_abs,
+                        REPLACE(getImgFonsMenu_f(id),'docs/fons/','') as url_img_fons,
+                        teFillsPublicats as te_fills,
+                        teFillsAmbMenu as te_fills_amb_menu
+                    FROM menus
+                    WHERE id = :id
+                        AND data_baixa is null
+                        AND estaPublicat_f(id) > 0",
+                "params" => [
+                    ":id" => $vId,
+                    ":idioma_seo" => $vIdioma,
+                    ":idioma_titol" => $vIdioma,
+                    ":idioma_meta_descipcio" => $vIdioma
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0][0];
+    }
+
+    public static function getMenusForFilAriadna(int $vId, ?string $vIdioma = "CA")
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            "0" => [
+                "query" =>
+                    "SELECT
+                        id,
+                        getIdSeo_f(id,getTitolByIdioma_f(id,:idioma_seo)) as idseo,
+                        getTitolByIdioma_f(id,:idioma_titol) as titol,
+                        menu_pare
+                    FROM menus
+                    WHERE id = :id
+                        AND data_baixa is null
+                        AND estaPublicat_f(id) > 0",
+                "params" => [
+                    ":id" => $vId,
+                    ":idioma_seo" => $vIdioma,
+                    ":idioma_titol" => $vIdioma
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0][0];
+    }
+
+    public static function getContingut(int $vId, ?string $vIdioma = "CA")
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            "0" => [
+                "query" =>
+                    "SELECT
+                            m.id,
+                            m.menu_pare,
+                            IF (mi.titol is not null,mi.titol,m.titol) as titol,
+                            IF (mi.descripcio is not null,mi.descripcio,m.descripcio) as descripcio,
+                            IF (mi.contingut is not null,mi.contingut,m.contingut) as contingut,
+                            IF (mi.contingutJSON is not null,mi.contingutJSON,m.contingutJSON) as contingutJSON,
+                            m.format_fills as mostrar_fills,
+                            null as mostrar_cerca,
+                            m.format_fills,
+                            m.img as img_abs,
+                            IF(m.img is null,'',SUBSTRING_INDEX(m.img, '/', -1)) as img,
+                            GROUP_CONCAT(md.id_descriptor ORDER BY md.id_descriptor SEPARATOR ',') AS descriptors
+                        FROM  menus m
+                        LEFT JOIN menus_i18n mi ON mi.id_menu = m.id AND mi.idioma = :idioma
+                        LEFT JOIN menus_descriptors md ON m.id = md.id_menu
+                        WHERE publicat > 0
+                            AND m.data_baixa is null
+                            AND m.id = :id
+                        GROUP BY m.id, m.menu_pare, m.titol, m.descripcio, m.contingut, m.contingutJSON,
+							m.format_fills, m.img, 
+							mi.titol, mi.descripcio, mi.contingut, mi.contingutJSON",
+                "params" => [
+                    ":id" => $vId,
+                    ":idioma" => $vIdioma,
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0][0];
+    }
+
+    public static function getMenusVars(int $vIdMenu)
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            "0" => [
+                "query" =>
+                    "SELECT
+                        *
+                    FROM menus_vars cm
+                    WHERE
+                        id_menu = :idMenu",
+                "params" => [
+                    ":idMenu" => $vIdMenu
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0];
+    }
+
+    public static function getMenusDocuments(int $vIdMenu)
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            [
+                "query" =>
+                    "SELECT
+                        SUBSTRING_INDEX(file, '/', -1) as path,
+                        file as path_abs,
+                        img as img_abs,
+                        tipus,
+                        categoria,
+                        id_menu,
+                        titol,
+                        titol as descripcio,
+                        text_boto,
+                        url,
+                        alt_img,
+                        desc_llarga_img
+                    FROM menus_documents cm
+                    WHERE
+                        id_menu = :idMenu
+                        AND visible_auto = 1
+                        AND (data_fi is null OR CURDATE() <= data_fi)
+                        AND (data_inici is null OR  data_inici <= CURDATE())
+                    ORDER BY tipus,ordre,titol",
+                "params" => [
+                    ":idMenu" => $vIdMenu
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0];
+    }
+    public static function getCssPag(int $vIdMenu)
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            "0" => [
+                "query" =>
+                    "SELECT
+                        teCssPag_f(:idMenu) as css_pag",
+                "params" => [
+                    ":idMenu" => $vIdMenu
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0][0];
+    }
 }

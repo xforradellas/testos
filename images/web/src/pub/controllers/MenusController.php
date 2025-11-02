@@ -5,6 +5,7 @@ use Ajt\ApiBase\BaseService;
 use Ajt\ApiBase\BaseController;
 use Ajt\ApiBase\Request;
 use Ajt\Test\pub\services\MenusService;
+use Ajt\Test\pub\services\PortalsService;
 
 
 class MenusController extends BaseController {
@@ -20,8 +21,9 @@ class MenusController extends BaseController {
     {
         $id = (int) $params['idMenu'] ?? null;
         $idPortal = (int) $params['id'] ?? null;
+        $idioma = $req->query['idioma'] ?? "CA";
 
-        $result = $this->service->getById($idPortal,$id);
+        $result = $this->service->getById($idPortal,$id,$idioma);
         return [
             "dades" => $result,
             "total" => 1,
@@ -34,8 +36,22 @@ class MenusController extends BaseController {
         return $this->service->getAll();
     }
 
-    public function getFilAriadna(Request $req) {
-        return [];
+    public function getFilAriadna(Request $req,$params) {
+
+        $idPortal = (int) $params['id'] ?? null;
+        $id = (int) $params['idMenu'] ?? 0;
+        $idioma = $req->query['idioma'] ?? "CA";
+
+        $portalSvc = new PortalsService();
+        $portal = $portalSvc->find($idPortal);
+        $idArrel = $portal->id_menu_principal;
+
+        $resultat = $this->service->getFilAriadna($id,$idArrel,$idioma);
+        return [
+            "dades" => $resultat,
+            "total" => sizeof($resultat),
+            "date" => date("Y-m-d H:i:s")
+        ];
     }
 
 }

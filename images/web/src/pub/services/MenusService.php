@@ -15,24 +15,57 @@ class MenusService extends BaseService {
     protected string $modelClass = MenusModel::class;
     // Aquí pots afegir lògica extra si cal
 
-    public function getById(int $vIdPortal,int $vIdMenu) {
+    public function getById(int $vIdPortal,int $vIdMenu,string $vIdioma) {
 
         $portalSvc=new PortalsService();
         $portal = $portalSvc->find($vIdPortal);
-        $resultat = $this->find($vIdMenu);
+        $menu = MenusModel::getMenu($vIdMenu,$vIdioma);
+        if (!$menu) {
+            throw new ExceptionApiBase("No trobat",404);
+        }
+        $idMenuPrincipal = $portal->id_menu_principal;
 
+        switch($menu['gestor']) {
 
+            case "article": // article
+                $menu['tipus']="1";
+                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
+                break;
+            case "articleJSON": // article
+                $menu['tipus']="7";
+                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
+                break;
+            case "enllac": //
+                $menu['tipus']="2";
+                break;
+            case "menuCompartit": //compartit -> no hauria d'arribar mai aqui
+//                $vIdCompartit = $this->getIdCompartitFinal($aRetorn['id_compartit'],$vId);
+                $menu['tipus']="3";
+//                $aRetorn['contingut']=$this->getContingut($vIdCompartit) ?? "";
+                break;
 
-        if (!empty($aRetorn)) {
-            foreach($aRetorn as $vKey => $aObj) {
-                if ($aObj['te_fills'] == 1) {
-                    $aRetorn[$vKey]['fills'] = $this->getNodeByMenuPare($aObj['id'],$vIdioma);
-                }
+            case "llistatDocuments": //llistatdocuments
+                $menu['tipus']="4";
+                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
+//                $aRetorn['documents']=$this->getDocumentsByMenuPare($aRetorn['id_arxius']) ?? "";
 
-            }
+                break;
+            case "album": // Album ??
+                $menu['tipus']="5";
+                break;
+            case "codi": //codi
+                $menu['tipus']="6";
+                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
+                break;
+            default:
+                // sense acció
+                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
+                break;
         }
 
-        return $aRetorn;
+        $menu['filAriadna'] = $this->getFilAriadna($vIdMenu,$idMenuPrincipal,$vIdioma);
+
+        return $menu;
     }
     public function getNodeByMenuPare($vMenuPare,$vIdioma) {
 
@@ -48,5 +81,130 @@ class MenusService extends BaseService {
         }
 
         return $aRetorn;
+    }
+
+    public function getFilAriadna (int $id,int $idArrel,string $vIdioma = "CA",int $posicio = 0) {
+        // si l'arrel i el id són iguals tornem array buit
+
+        if ($id === $idArrel || $id < 1) {
+            return [];
+        }
+        //recuperem l'id actual
+        $aResult = MenusModel::getMenusForFilAriadna($id,$vIdioma) ?? [];
+        //mirem si l'identificador és més gran de 0 ( el primer)
+        //controlem que no fem més de 100 iteracions, això seria un bucle infinit
+        if (!empty($aResult) && $posicio < 100) {
+            $aRetorn = $this->getFilAriadna($aResult['menu_pare'],$idArrel,$posicio+1);
+            if (!empty($aResult)) {
+                $aRetorn[] = [
+                    'id' => $aResult['id'],
+                    'idseo' => $aResult['idseo'],
+                    'titol' => $aResult['titol']
+                ];
+            }
+        }
+
+        return $aRetorn ?? [];
+    }
+
+    public  function getContingut($vIdMenu,$vIdioma = "CA") {
+        $aMenu = MenusModel::getContingut($vIdMenu,$vIdioma);
+        if (!$aMenu) {
+            throw new ExceptionApiBase("No trobat",404);
+        }
+
+        $aMenu['vars'] = $this->getVarsMenu($aMenu);
+        $aMenu['documents'] = $this->getDocsMenu($aMenu);
+
+
+        // ordre en que s'ordenaran els menus del contingut
+        // (ASC: 1...9, DESC: 9...1, ALF_ASC: A...Z, ALF_DESC: Z...A,
+        // DATA_ASC: 01/01/1900...31/12/2020, DATA_DESC: 31/12/2020...01/01/1900)
+//        $vOrdre = $aMenu['format_fills'] == 3 ? 'DATA_ASC' : 'ASC';
+
+//        $aMenu['fills'] = $this->getRepositori()->getMenusByMenuPareForFills($aMenu['id'],$vIdioma,0,$vOrdre) ?? [];
+//        foreach($aMenu['fills'] as &$aMenuFills) {
+//            $aMenuFills['vars'] = $this->getVarsMenu($aMenuFills);
+//            $aMenuFills['vars']['total'] = sizeof($aMenuFills['vars']);
+//        }
+//        $aMenu['relacionats'] = $this->getRepositori()->getMenusByMenuPareForFills($aMenu['menu_pare'],$vIdioma) ?? [];
+//        foreach($aMenu['relacionats'] as &$aMenuRel) {
+//            $aMenuRel['vars'] = $this->getVarsMenu($aMenuRel);
+//            $aMenuRel['vars']['total'] = sizeof($aMenuRel['vars']);
+//        }
+
+        // si tenim id_contingut ho canviem al contingut
+        if (!empty($aMenu['vars']['id_contingut'])) {
+            $aMenu['id'] = $aMenu['vars']['id_contingut'];
+            $aMenu['id_contingut'] = $aMenu['vars']['id_contingut'];
+        }
+        return $aMenu;
+    }
+
+    private function getVarsMenu($aMenu) {
+        $aVars = MenusModel::getMenusVars($aMenu['id']) ?? [];
+        $aResult = [];
+
+        foreach($aVars as $aVar) {
+
+            // no contem la variable id_contingut, per no fer el contingut més petit sense necesitat
+            if ($aVar['param'] !== 'id_contingut') {
+                $aResult[$aVar['param']] = $aVar['valor'];
+            }
+        }
+
+        $vCssPagTrobat = false;
+        if (!empty($aResult['css_pag'])) {
+            $vCssPagTrobat = true;
+        }
+
+        if (!$vCssPagTrobat) {
+            //mirem si el pare té css_pag
+            $vCssPag = MenusModel::getCssPag($aMenu['id'])['css_pag'] ?? '';
+            $aResult['css_pag'] = $vCssPag;
+        }
+
+        // no contem el css_pag. El total el fem servir per saber si tenim variables que es mostren en pantalla i s'ha de modificar la pantalla
+        $aResult['total'] = sizeof($aResult) - 1;
+
+        return $aResult ?? [];
+    }
+
+    private function getDocsMenu($aMenu) {
+        $aDocuments = MenusModel::getMenusDocuments($aMenu['id']) ?? [];
+        $aResult = [];
+
+        if (!empty($aDocuments)) {
+
+            $aResult = [
+                'imatges'      => [],
+                'documents'    => [],
+                'enllacos'     => [],
+                'enllacos_img' => [],
+            ];
+
+            foreach ($aDocuments as $obj) {
+                $categoria = $obj['categoria'] ?? '';
+                $tipus     = $obj['tipus'] ?? '';
+                $path      = $obj['path'] ?? '';
+
+                // Classificació especial
+                if ($categoria === 'img' || ($categoria === '' && $tipus === 'img')) {
+                    $aResult['imatges'][] = $obj;
+                } elseif ($categoria === 'pdf' || ($categoria === '' && $tipus === 'pdf')) {
+                    $aResult['documents'][] = $obj;
+                } elseif (($categoria === 'lnk' || ($categoria === '' && $tipus === 'lnk')) && $path === '') {
+                    $aResult['enllacos'][] = $obj;
+                } elseif (($categoria === 'lnk' || ($categoria === '' && $tipus === 'lnk')) && $path !== '') {
+                    $aResult['enllacos_img'][] = $obj;
+                } else {
+                    // Altres categories automàtiques
+                    $nomCategoria = $categoria ?: $tipus ?: 'altres';
+                    $aResult[$nomCategoria][] = $obj;
+                }
+            }
+        }
+
+        return $aResult ?? [];
     }
 }

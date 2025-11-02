@@ -19,10 +19,6 @@ class PortalsModel extends Model
     public ?string $mides_img_default;
     public ?string $version_admin;
 
-    // llistats
-    public ?array $vars;
-    public ?array $idiomes;
-    public ?array $menus;
     protected static function createInstance(?ConexionsDB $db = null): static
     {
         return new self($db);
@@ -46,5 +42,49 @@ class PortalsModel extends Model
         ];
 
         return (object) ($instance->db->execute($aSentencies)[0][0] ?? []);
+    }
+
+    public static function getVarsByIdPortal(int $vIdPortal)
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            [
+                "query" =>
+                    "SELECT
+                        nom as name,
+                        valor as value,
+                        tipus
+                    FROM portals_vars
+                    WHERE id_portal = :idPortal
+                    ORDER BY tipus DESC",
+                "params" => [
+                    ":idPortal" => $vIdPortal
+                ]
+            ],
+        ];
+
+        return $instance->db->execute($aSentencies)[0];
+    }
+
+    public static function getIdiomesByPortal(int $vIdPortal, string $vTipus)
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            [
+                "query" =>
+                    "SELECT
+                        idioma,
+                        concat(URL,'/',SUFIX) as url
+                    FROM hosts
+                    WHERE tipus = :tipus
+                      AND id_portal = :idPortal",
+                "params" => [
+                    ":idPortal" => $vIdPortal,
+                    ":tipus" => $vTipus
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0];
     }
 }
