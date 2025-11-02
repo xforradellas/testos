@@ -24,7 +24,7 @@ class PortalsModel extends Model
         return new self($db);
     }
 
-    public static function getPortalByUrl(string $vHost,string $vSufix): object
+    public static function getPortalByUrl(string $vHost,string $vSufix): array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -41,7 +41,7 @@ class PortalsModel extends Model
             ],
         ];
 
-        return (object) ($instance->db->execute($aSentencies)[0][0] ?? []);
+        return ($instance->db->execute($aSentencies)[0][0] ?? []);
     }
 
     public static function getVarsByIdPortal(int $vIdPortal)

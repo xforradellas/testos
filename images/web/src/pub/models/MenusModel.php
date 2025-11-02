@@ -46,98 +46,7 @@ class MenusModel extends Model
         return new self($db);
     }
 
-    public static function getMenusByMenuPare(int $vMenuPare, ?int $vPublicatParam = 0, ?string $vOrdreParam = "ASC", string $vIdioma = 'CA')
-    {
-        $instance = static::createInstance();
-
-        list ($vOrdre,$vPublicat) = self::getOrdres($vPublicatParam,$vOrdreParam);
-
-        $aSentencies = [
-            "0" => [
-                "query" =>
-                    "SELECT
-                        id,
-                        getIdSeo_f(id,getTitolByIdioma_f(id,:idioma_seo)) as idseo,
-                        getTitolByIdioma_f(id,:idioma_titol) as titol,
-                        IF(gestor = 'enllac',
-                            2,
-                            IF(gestor = 'menuCompartit',
-                                3,
-                                IF(gestor = 'llistatDocuments',
-                                    4,
-                                    IF(gestor = 'codi',
-                                        6,
-                                        1
-                                    )
-                                )
-                            )
-                        ) as tipus,
-                        publicat,
-                        IF(gestor = 'enllac', url, '') as  url,
-                        IF(gestor = 'enllac', enllac_extern, 0) as  enllac_extern,
-                        img as img_abs,
-                        SUBSTRING_INDEX(img, '/', -1) as img,
-                        teFillsPublicats as te_fills,
-                        teFillsAmbMenu as te_fills_amb_menu
-                    FROM menus
-                    WHERE menu_pare = :menuPare
-                        AND data_baixa is null
-                        AND ".$vPublicat
-                    .$vOrdre,
-                "params" => [
-                    ":menuPare" => $vMenuPare,
-                    ":idioma_seo" => $vIdioma,
-                    ":idioma_titol" => $vIdioma,
-
-                ]
-            ]
-        ];
-
-        return $instance->db->execute($aSentencies)[0];
-    }
-
-    private static function getOrdres($vPublicatParam,$vOrdreParam) {
-        switch ($vOrdreParam) {
-            default:
-            case "ASC": // 1...9
-                $vOrdre = " ORDER BY ordre";
-                break;
-            case "DESC": // 9...1
-                $vOrdre = " ORDER BY ordre DESC";
-                break;
-            case "ALF_ASC": // A...Z
-                $vOrdre = " ORDER BY titol,ordre";
-                break;
-            case "ALF_DESC": // Z...A
-                $vOrdre = " ORDER BY titol DESC,ordre";
-                break;
-            case "DATA_ASC": // 01/01/1900...12/31/2000
-                $vOrdre = " ORDER BY data,ordre";
-                break;
-            case "DATA_DESC": // 12/31/2000...01/01/1900
-                $vOrdre = " ORDER BY data DESC,ordre";
-                break;
-        }
-
-        switch ($vPublicatParam) {
-            default:
-            case "0": // 1...9
-                $vPublicat = " publicat > 0 ";
-                break;
-            case "1": // 9...1
-                $vPublicat = " publicat = 1 ";
-                break;
-            case "2": // A...Z
-                $vPublicat = " publicat = 2 ";
-                break;
-        }
-        return [
-            $vOrdre,
-            $vPublicat
-        ];
-    }
-
-    public static function getMenu(int $vId, ?string $vIdioma = "CA")
+    public static function getMenu(int $vId, ?string $vIdioma = "CA"): array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -203,6 +112,129 @@ class MenusModel extends Model
         return $instance->db->execute($aSentencies)[0][0];
     }
 
+    public static function getMenusByMenuPare(int $vMenuPare, ?int $vPublicatParam = 0, ?string $vOrdreParam = "ASC", string $vIdioma = 'CA')
+    {
+        $instance = static::createInstance();
+
+        list ($vOrdre,$vPublicat) = self::getOrdres($vPublicatParam,$vOrdreParam);
+
+        $aSentencies = [
+            "0" => [
+                "query" =>
+                    "SELECT
+                        id,
+                        getIdSeo_f(id,getTitolByIdioma_f(id,:idioma_seo)) as idseo,
+                        getTitolByIdioma_f(id,:idioma_titol) as titol,
+                        IF(gestor = 'enllac',
+                            2,
+                            IF(gestor = 'menuCompartit',
+                                3,
+                                IF(gestor = 'llistatDocuments',
+                                    4,
+                                    IF(gestor = 'codi',
+                                        6,
+                                        1
+                                    )
+                                )
+                            )
+                        ) as tipus,
+                        publicat,
+                        IF(gestor = 'enllac', url, '') as  url,
+                        IF(gestor = 'enllac', enllac_extern, 0) as  enllac_extern,
+                        img as img_abs,
+                        SUBSTRING_INDEX(img, '/', -1) as img,
+                        teFillsPublicats as te_fills,
+                        teFillsAmbMenu as te_fills_amb_menu
+                    FROM menus
+                    WHERE menu_pare = :menuPare
+                        AND data_baixa is null
+                        AND ".$vPublicat
+                    .$vOrdre,
+                "params" => [
+                    ":menuPare" => $vMenuPare,
+                    ":idioma_seo" => $vIdioma,
+                    ":idioma_titol" => $vIdioma,
+
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0];
+    }
+
+    public static function getMenusByMenuPareForFills(int $vMenuPare,string $vIdioma = 'CA', ?int $vPublicatParam = 0, ?string $vOrdreParam = "ASC")
+    {
+        $instance = static::createInstance();
+
+        list ($vOrdre,$vPublicat) = self::getOrdres($vPublicatParam,$vOrdreParam);
+
+        $aSentencies = [
+            [
+                "query" =>
+                    "SELECT
+                        m.*,
+                        GETIDSEO_F(`m`.`id`, IF (mi.titol is not null,mi.titol,m.titol)) AS `idseo`,
+		                IF (mi.titol is not null,mi.titol,m.titol) as titol,
+		                IF (mi.descripcio is not null,mi.descripcio,m.descripcio) as descripcio,
+                        COALESCE(
+							(SELECT valor FROM portals_vars WHERE id_portal = m.id_portal AND tipus = 'var' AND nom = 'imgDefault'),
+							''
+						) AS img_defecte,
+						MAX((CASE
+							WHEN (`mv`.`param` = 'id_contingut') THEN `mv`.`valor`
+							ELSE m.id
+						END)) AS `id_contingut`,
+						MAX((CASE
+							WHEN (`mv`.`param` = 'data') THEN `mv`.`valor`
+							ELSE NULL
+						END)) AS `data`,
+						MAX((CASE
+							WHEN (`mv`.`param` = 'horari') THEN `mv`.`valor`
+							ELSE NULL
+						END)) AS `horari`,
+						MAX((CASE
+							WHEN (`mv`.`param` = 'adreca') THEN `mv`.`valor`
+							ELSE NULL
+						END)) AS `adreca`,
+						MAX((CASE
+							WHEN (`mv`.`param` = 'preu') THEN `mv`.`valor`
+							ELSE NULL
+						END)) AS `preu`,
+						MAX((CASE
+							WHEN (`mv`.`param` = 'durada') THEN `mv`.`valor`
+							ELSE NULL
+						END)) AS `durada`,
+						MAX((CASE
+							WHEN (`mv`.`param` = 'url_pagament') THEN `mv`.`valor`
+							ELSE NULL
+						END)) AS `url_pagament`,
+						MAX((CASE
+							WHEN (`mv`.`param` = 'telefon') THEN `mv`.`valor`
+							ELSE NULL
+						END)) AS `telefon`,
+						MAX((CASE
+							WHEN (`mv`.`param` = 'email') THEN `mv`.`valor`
+							ELSE NULL
+						END)) AS `email`,
+                        GROUP_CONCAT(md.id_descriptor ORDER BY md.id_descriptor SEPARATOR ',') AS descriptors
+                    FROM getMenuForFills2_v m
+                    LEFT JOIN menus_i18n mi ON mi.id_menu = m.id AND mi.idioma = :idioma
+                    LEFT JOIN `menus_vars` `mv` ON `m`.`id` = `mv`.`id_menu`
+                    LEFT JOIN menus_descriptors md ON m.id = md.id_menu
+                    WHERE menu_pare = :menuPare
+                        AND ".$vPublicat
+                    ." GROUP BY id,mi.titol,mi.descripcio"
+                    .$vOrdre,
+                "params" => [
+                    ":menuPare" => $vMenuPare,
+                    ":idioma" => $vIdioma,
+
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0];
+    }
     public static function getContingut(int $vId, ?string $vIdioma = "CA")
     {
         $instance = static::createInstance();
@@ -310,5 +342,46 @@ class MenusModel extends Model
         ];
 
         return $instance->db->execute($aSentencies)[0][0];
+    }
+
+    private static function getOrdres($vPublicatParam,$vOrdreParam) {
+        switch ($vOrdreParam) {
+            default:
+            case "ASC": // 1...9
+                $vOrdre = " ORDER BY ordre";
+                break;
+            case "DESC": // 9...1
+                $vOrdre = " ORDER BY ordre DESC";
+                break;
+            case "ALF_ASC": // A...Z
+                $vOrdre = " ORDER BY titol,ordre";
+                break;
+            case "ALF_DESC": // Z...A
+                $vOrdre = " ORDER BY titol DESC,ordre";
+                break;
+            case "DATA_ASC": // 01/01/1900...12/31/2000
+                $vOrdre = " ORDER BY data,ordre";
+                break;
+            case "DATA_DESC": // 12/31/2000...01/01/1900
+                $vOrdre = " ORDER BY data DESC,ordre";
+                break;
+        }
+
+        switch ($vPublicatParam) {
+            default:
+            case "0": // 1...9
+                $vPublicat = " publicat > 0 ";
+                break;
+            case "1": // 9...1
+                $vPublicat = " publicat = 1 ";
+                break;
+            case "2": // A...Z
+                $vPublicat = " publicat = 2 ";
+                break;
+        }
+        return [
+            $vOrdre,
+            $vPublicat
+        ];
     }
 }

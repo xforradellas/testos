@@ -115,29 +115,9 @@ class MenusService extends BaseService {
 
         $aMenu['vars'] = $this->getVarsMenu($aMenu);
         $aMenu['documents'] = $this->getDocsMenu($aMenu);
+        $aMenu['fills'] = $this->getFillsMenu($vIdMenu,$vIdioma);
+        $aMenu['relacionats'] = $this->getRelacionatsMenu($vIdMenu,$vIdioma);
 
-
-        // ordre en que s'ordenaran els menus del contingut
-        // (ASC: 1...9, DESC: 9...1, ALF_ASC: A...Z, ALF_DESC: Z...A,
-        // DATA_ASC: 01/01/1900...31/12/2020, DATA_DESC: 31/12/2020...01/01/1900)
-//        $vOrdre = $aMenu['format_fills'] == 3 ? 'DATA_ASC' : 'ASC';
-
-//        $aMenu['fills'] = $this->getRepositori()->getMenusByMenuPareForFills($aMenu['id'],$vIdioma,0,$vOrdre) ?? [];
-//        foreach($aMenu['fills'] as &$aMenuFills) {
-//            $aMenuFills['vars'] = $this->getVarsMenu($aMenuFills);
-//            $aMenuFills['vars']['total'] = sizeof($aMenuFills['vars']);
-//        }
-//        $aMenu['relacionats'] = $this->getRepositori()->getMenusByMenuPareForFills($aMenu['menu_pare'],$vIdioma) ?? [];
-//        foreach($aMenu['relacionats'] as &$aMenuRel) {
-//            $aMenuRel['vars'] = $this->getVarsMenu($aMenuRel);
-//            $aMenuRel['vars']['total'] = sizeof($aMenuRel['vars']);
-//        }
-
-        // si tenim id_contingut ho canviem al contingut
-        if (!empty($aMenu['vars']['id_contingut'])) {
-            $aMenu['id'] = $aMenu['vars']['id_contingut'];
-            $aMenu['id_contingut'] = $aMenu['vars']['id_contingut'];
-        }
         return $aMenu;
     }
 
@@ -206,5 +186,34 @@ class MenusService extends BaseService {
         }
 
         return $aResult ?? [];
+    }
+
+    private function getFillsMenu(array $aMenu,string $vIdioma) {
+
+        // ordre en que s'ordenaran els menus del contingut
+        // (ASC: 1...9, DESC: 9...1, ALF_ASC: A...Z, ALF_DESC: Z...A,
+        // DATA_ASC: 01/01/1900...31/12/2020, DATA_DESC: 31/12/2020...01/01/1900)
+        $vOrdre = $aMenu['format_fills'] == 3 ? 'DATA_ASC' : 'ASC';
+
+        $aResult = MenusModel::getMenusByMenuPareForFills($aMenu['id'],$vIdioma,0,$vOrdre) ?? [];
+        foreach($aResult as &$aMenuFills) {
+            $aMenuFills['vars'] = $this->getVarsMenu($aMenuFills);
+            $aMenuFills['vars']['total'] = sizeof($aMenuFills['vars']);
+        }
+
+        return $aResult ?? [];
+
+    }
+
+    private function getRelacionatsMenu(array $aMenu,string $vIdioma) {
+
+        $aResult = MenusModel::getMenusByMenuPareForFills($aMenu['menu_pare'],$vIdioma) ?? [];
+        foreach($aResult as &$aMenuRel) {
+            $aMenuRel['vars'] = $this->getVarsMenu($aMenuRel);
+            $aMenuRel['vars']['total'] = sizeof($aMenuRel['vars']);
+        }
+
+        return $aResult ?? [];
+
     }
 }

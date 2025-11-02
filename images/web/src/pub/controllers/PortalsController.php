@@ -30,13 +30,10 @@ class PortalsController extends BaseController {
     public function getAll(Request $req) {
         $aRetorn = [];
 
-
         $vUrl = $req->query['url'] ?? null;
         if ($vUrl) {
             $resultat = $this->service->getPortalByUrl($vUrl);
-            $resultat->vars = $this->service->getVarsByIdPortal($resultat->id);
-            $resultat->idiomes = $this->service->getIdiomesByIdPortal($resultat->id,$resultat->hostTipus);
-            $resultat->menus = $this->service->getMenus($resultat->id_menu_principal,$resultat->idioma);
+
             if (!empty($vUrl)) {
                 $aRetorn = [
                     "dades" => $resultat,

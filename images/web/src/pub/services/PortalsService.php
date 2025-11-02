@@ -23,6 +23,10 @@ class PortalsService extends BaseService {
             throw new ExceptionApiBase("No trobat",404);
         }
 
+        $resultat['vars'] = $this->getVarsByIdPortal($resultat['id']);
+        $resultat['idiomes'] = $this->getIdiomesByIdPortal($resultat['id'],$resultat['hostTipus']);
+        $resultat['menus'] = $this->getMenus($resultat['id_menu_principal'],$resultat['idioma']);
+
         return $resultat;
     }
 
