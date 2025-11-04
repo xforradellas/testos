@@ -471,4 +471,47 @@ class MenusModel extends Model
 
         return $instance->db->execute($aSentencies)[0] ?? null;
     }
+
+    public static function getCercaByPortal(int $vIdPortal,string $vCerca,string $vIdioma = "CA"): ?array
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            [
+                "query" =>
+                    "SELECT MATCH(titol) AGAINST (:cerca_titol IN BOOLEAN MODE) * 5 +
+                           MATCH(contingut) AGAINST (:cerca_contingut IN BOOLEAN MODE) * 1 AS ranquing,
+                           cm.id,
+                           getIdSeo_f(id, titol) AS 'idseo',
+                           titol,
+                           getIdSeo_f(id,getTitolByIdioma_f(id,:idioma_seo)) as idseo,
+                           getTitolByIdioma_f(id,:idioma_titol) as titol,
+                           getFilAriadnaIdioma_f(id,:idioma_filariadna) AS filAriana,
+                           cm.descripcio,
+                           getTipusMenu_f(id) as tipus,
+                           cm.enllac_extern,
+                           cm.url,
+                           cm.publicat,
+                           cm.id_portal
+                    FROM  menus cm
+                    WHERE ESTAPUBLICAT_F(cm.id) > 0
+                        AND cm.data_baixa IS NULL
+                        AND cm.id_portal = :idPortal
+                        AND (MATCH(titol) AGAINST (:cerca_titol_where IN BOOLEAN MODE)
+                         OR MATCH(contingut) AGAINST (:cerca_contingut_where IN BOOLEAN MODE))
+                    ORDER BY ranquing DESC",
+                "params" => [
+                    ":idPortal" => $vIdPortal,
+                    ":cerca_titol" => '*'.$vCerca.'*',
+                    ":cerca_contingut" => '*'.$vCerca.'*',
+                    ":cerca_titol_where" => '*'.$vCerca.'*',
+                    ":cerca_contingut_where" => '*'.$vCerca.'*',
+                    ":idioma_seo" => $vIdioma,
+                    ":idioma_titol" => $vIdioma,
+                    ":idioma_filariadna" => $vIdioma
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0] ?? null;
+    }
 }

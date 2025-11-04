@@ -21,10 +21,12 @@ $router = new Router();
 // hosts
 $router->register('GET', '/pub/portals', [$portalsCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
 $router->register('GET', '/pub/portals/{id}', [$portalsCtrl, 'getById'],['cache' => true,'cache_ttl' => 60]);
+
 $router->register('GET', '/pub/portals/{id}/menus', [$menusCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
 $router->register('GET', '/pub/portals/{id}/menus/{idMenu}', [$menusCtrl, 'getById'],['cache' => true,'cache_ttl' => 60]);
 $router->register('GET', '/pub/portals/{id}/menus/{idMenu}/@filariadna', [$menusCtrl, 'getFilAriadna'],['cache' => true,'cache_ttl' => 60]);
 $router->register('GET', '/pub/portals/{id}/ultimesact', [$menusCtrl, 'getUltimesAct']);
+$router->register('GET', '/pub/portals/{id}/cercar/{cerca}', [$menusCtrl, 'getCerca'],['cache' => true,'cache_ttl' => 60]);
 
 // Llança el router
 $router->dispatch($request);

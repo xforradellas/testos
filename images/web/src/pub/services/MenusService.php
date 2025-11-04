@@ -88,6 +88,10 @@ class MenusService extends BaseService {
         return MenusModel::getMenusUltimesActualitzacions($vIdPortal);
     }
 
+    public  function getCercaByPortal(int $vIdPortal,string $vCerca,string $vIdioma = "CA"): ?array
+    {
+        return MenusModel::getCercaByPortal($vIdPortal,$vCerca,$vIdioma);
+    }
     public function getFilAriadna (int $id,int $idArrel,string $vIdioma = "CA",int $posicio = 0) {
         // si l'arrel i el id són iguals tornem array buit
 

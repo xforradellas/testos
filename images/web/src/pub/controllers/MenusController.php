@@ -67,4 +67,18 @@ class MenusController extends BaseController {
             "date" => date("Y-m-d H:i:s")
         ];
     }
+
+    public function getCerca(Request $req,$params) {
+
+        $idPortal = (int) $params['id'] ?? 0;
+        $cerca = $params['cerca'] ?? "";
+        $idioma = $req->query['lang'] ?? "CA";
+
+        $resultat = $this->service->getCercaByPortal($idPortal,$cerca,$idioma);
+        return [
+            "dades" => $resultat,
+            "total" => sizeof($resultat),
+            "date" => date("Y-m-d H:i:s")
+        ];
+    }
 }
