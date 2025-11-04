@@ -384,4 +384,60 @@ class MenusModel extends Model
             $vPublicat
         ];
     }
+
+    public static function getDocument(int $vId)
+    {
+        $instance = static::createInstance();
+
+        $aSentencies = [
+             [
+                "query" =>
+                    "SELECT
+                        *,
+                        teDocumentsFills_f(id) as te_fills
+                    FROM documents
+                    WHERE id = :id
+                      AND data_baixa is null",
+                "params" => [
+                    ":id" => $vId
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0];
+    }
+
+    public static function getAllDocumentsByMenuPare(int $vMenuPare,int $ordreDesc = 0)
+    {
+        $instance = static::createInstance();
+
+        $vOrdre = '';
+        if ($ordreDesc > 0) {
+            $vOrdre = 'DESC';
+        }
+        $aSentencies = [
+            "0" => [
+                "query" =>
+                    "SELECT
+                        id,
+                        titol,
+                        descripcio,
+                        IF(url_document != '',REPLACE(url_document,'docs/arxius/',''),'') as url_document,
+                        IF(url_document_csv != '',REPLACE(url_document_csv,'docs/arxius/',''),'') as url_document_csv,
+                        IF(url_document_xml != '',REPLACE(url_document_xml,'docs/arxius/',''),'') as url_document_xml,
+                        tipus,
+                        ordenat_per as ordreDescendent,
+                        teDocumentsFills_f(id) as te_fills
+                    FROM documents
+                    WHERE menu_pare = :menuPare
+                        AND data_baixa is null
+                    ORDER BY tipus DESC,ordre ".$vOrdre,
+                "params" => [
+                    ":menuPare" => $vMenuPare
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0];
+    }
 }

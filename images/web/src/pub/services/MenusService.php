@@ -47,7 +47,7 @@ class MenusService extends BaseService {
             case "llistatDocuments": //llistatdocuments
                 $menu['tipus']="4";
                 $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
-//                $aRetorn['documents']=$this->getDocumentsByMenuPare($aRetorn['id_arxius']) ?? "";
+                $menu['documents']=$this->getDocsByMenuPare($aRetorn['id_arxius']) ?? "";
 
                 break;
             case "album": // Album ??
@@ -115,8 +115,8 @@ class MenusService extends BaseService {
 
         $aMenu['vars'] = $this->getVarsMenu($aMenu);
         $aMenu['documents'] = $this->getDocsMenu($aMenu);
-        $aMenu['fills'] = $this->getFillsMenu($vIdMenu,$vIdioma);
-        $aMenu['relacionats'] = $this->getRelacionatsMenu($vIdMenu,$vIdioma);
+        $aMenu['fills'] = $this->getFillsMenu($aMenu,$vIdioma);
+        $aMenu['relacionats'] = $this->getRelacionatsMenu($aMenu,$vIdioma);
 
         return $aMenu;
     }
@@ -150,8 +150,36 @@ class MenusService extends BaseService {
         return $aResult ?? [];
     }
 
+    private function getDocsByMenuPare($vMenuPare) {
+        if ($vMenuPare != 0) {
+            $aRetorn = MenusModel::getDocument($vMenuPare);
+            if (!$aRetorn) {
+                throw new ExceptionApiBase("Menú pare no trobat",404);
+            }
+        }
+
+        $ordreDesc = $aRetorn['ordreDescendent'] ?? 0;
+
+        return $this->getNodeDocByMenuPare((int) $vMenuPare,(int) $ordreDesc);
+    }
+
+    private function getNodeDocByMenuPare(int $vMenuPare,int $ordreDesc) {
+
+        $aRetorn = MenusModel::getAllDocumentsByMenuPare($vMenuPare,$ordreDesc);
+
+        if ($aRetorn) {
+            foreach($aRetorn as $vKey => $aObj) {
+                if ($aObj['tipus'] == 'C' && $aObj['te_fills'] == 1) {
+                    $aRetorn[$vKey]['items'] = $this->getNodeDocByMenuPare($aObj['id'],$aObj['ordreDescendent']);
+                }
+            }
+        }
+
+        return $aRetorn;
+    }
+
     private function getDocsMenu($aMenu) {
-        $aDocuments = MenusModel::getMenusDocuments($aMenu['id']) ?? [];
+        $aDocuments = MenusModel::getMenusDocuments((int) $aMenu['id']) ?? [];
         $aResult = [];
 
         if (!empty($aDocuments)) {
