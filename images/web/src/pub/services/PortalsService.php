@@ -65,9 +65,7 @@ class PortalsService extends BaseService {
                     break;
                 case "descriptors":
                     try {
-//                        $resultat[$kObj]['llistat'] = $this->getRepositori()
-//                            ->getDescriptorsByPortalAndTipus($aRetorn['id'],$aObj['name'],$aRetorn['idioma']) ?? "";
-                        $resultat[$kObj]['llistat'] = "llistat";
+                        $resultat[$kObj]['llistat'] = PortalsModel::getDescriptorsByPortalAndTipus($idPortal,$aObj['name'],$aRetorn['idioma']) ?? "";
                     } catch (\Throwable $e) {
                         $resultat[$kObj]['error'] = $e->getMessage();
                     }

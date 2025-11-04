@@ -113,7 +113,31 @@ class PortalsModel extends Model
             ]
         ];
 
-        print_r($aSentencies);
-        return ($instance->db->execute($aSentencies)[0][0] ?? []);
+        return ($instance->db->execute($aSentencies)[0] ?? []);
+    }
+
+    public static function getDescriptorsByPortalAndTipus(int $vIdPortal,string $vTipus,string $vIdioma = 'CA'): array
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            [
+                "query" =>
+                    "SELECT
+	                    d.id,
+	                    IF (dn.titol is not null,dn.titol,d.titol) as titol
+                    FROM descriptors d
+                        LEFT JOIN descriptors_i18n dn ON d.id = dn.id_descriptor AND idioma = :idioma
+                    WHERE id_portal = :idPortal
+	                    AND tipus = :tipus
+                    ORDER BY d.tipus,d.titol;",
+                "params" => [
+                    ":idPortal" => $vIdPortal,
+                    ":tipus" => $vTipus,
+                    ":idioma" => $vIdioma
+                ]
+            ]
+        ];
+
+        return ($instance->db->execute($aSentencies)[0] ?? []);
     }
 }
