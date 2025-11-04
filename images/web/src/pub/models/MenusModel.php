@@ -440,4 +440,35 @@ class MenusModel extends Model
 
         return $instance->db->execute($aSentencies)[0] ?? null;
     }
+
+    public static function getMenusUltimesActualitzacions(int $vIdPortal): ?array
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            "0" => [
+                "query" =>
+                    "SELECT
+                        id,
+                        GETIDSEO_F(id, titol) AS idseo,
+                        titol,
+                        titol as descr,
+                        url,
+                        data_mod as ultima_act,
+                        getTipusMenu_f(id) AS `ref_continguts_tipus`,
+                        getTipusMenu_f(id) AS `tipus`
+                    FROM menus
+                    WHERE id_portal = :id_portal
+                        AND estaPublicat_f(id) > 0
+                    GROUP BY id
+                    ORDER BY data_mod DESC
+                    LIMIT 100
+                    ",
+                "params" => [
+                    ":id_portal" => $vIdPortal
+                ]
+            ]
+        ];
+
+        return $instance->db->execute($aSentencies)[0] ?? null;
+    }
 }

@@ -52,7 +52,7 @@ class PortalsService extends BaseService {
                     try {
                         $resultat[$kObj]['content'] = MenusModel::getContingut($aObj['value'],$resultat['idioma']) ?? "";
                     } catch (\Throwable $e) {
-                        $resultat[$kObj]['error'] = $e->getMessage();
+                        throw new ExceptionApiBase($e->getMessage(),$e->getCode());
                     }
                     break;
                 case "destacats":
@@ -60,14 +60,14 @@ class PortalsService extends BaseService {
                         $resultat[$kObj]['llistat'] = PortalsModel::getDestacatsByPortalAndTipus( $idPortal,$aObj['name']) ?? "";
 
                     } catch (\Throwable $e) {
-                        $resultat[$kObj]['error'] = $e->getMessage();
+                        throw new ExceptionApiBase($e->getMessage(),$e->getCode());
                     }
                     break;
                 case "descriptors":
                     try {
                         $resultat[$kObj]['llistat'] = PortalsModel::getDescriptorsByPortalAndTipus($idPortal,$aObj['name'],$aRetorn['idioma']) ?? "";
                     } catch (\Throwable $e) {
-                        $resultat[$kObj]['error'] = $e->getMessage();
+                        throw new ExceptionApiBase($e->getMessage(),$e->getCode());
                     }
                 default:
                     // sense acció

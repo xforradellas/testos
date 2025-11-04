@@ -54,4 +54,17 @@ class MenusController extends BaseController {
         ];
     }
 
+    public function getUltimesAct(Request $req,$params) {
+
+        $idPortal = (int) $params['id'] ?? null;
+        $max = $req->query['maxres'] ?? 5;
+
+        $resultat = $this->service->getUltimesAct($idPortal);
+        $resultat = array_slice($resultat,0,$max);
+        return [
+            "dades" => $resultat,
+            "total" => sizeof($resultat),
+            "date" => date("Y-m-d H:i:s")
+        ];
+    }
 }

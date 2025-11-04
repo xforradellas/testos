@@ -83,6 +83,11 @@ class MenusService extends BaseService {
         return $aRetorn;
     }
 
+    public  function getUltimesAct(int $vIdPortal)
+    {
+        return MenusModel::getMenusUltimesActualitzacions($vIdPortal);
+    }
+
     public function getFilAriadna (int $id,int $idArrel,string $vIdioma = "CA",int $posicio = 0) {
         // si l'arrel i el id són iguals tornem array buit
 
