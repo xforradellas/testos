@@ -87,4 +87,33 @@ class PortalsModel extends Model
 
         return $instance->db->execute($aSentencies)[0];
     }
+
+    public static function getDestacatsByPortalAndTipus(int $vIdPortal,string $vTipus): array
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            [
+                "query" =>
+                    "SELECT
+                          id,
+                        titol,
+                        REPLACE(img,'/docs/".$vTipus."/','') as imatge,
+                        img as imatge_abs,
+                        url
+                     FROM destacats
+                     WHERE id_portal = :idPortal
+                        AND tipus = :tipus
+                        AND (data_fi is null OR CURDATE() <= data_fi)
+                        AND (data_inici is null OR  data_inici <= CURDATE())
+                     ORDER BY ordre",
+                "params" => [
+                    ":idPortal" => $vIdPortal,
+                    ":tipus" => $vTipus,
+                ]
+            ]
+        ];
+
+        print_r($aSentencies);
+        return ($instance->db->execute($aSentencies)[0][0] ?? []);
+    }
 }

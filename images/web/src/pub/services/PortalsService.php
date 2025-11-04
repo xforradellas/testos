@@ -57,9 +57,7 @@ class PortalsService extends BaseService {
                     break;
                 case "destacats":
                     try {
-//                        $resultat[$kObj]['llistat'] = $this->getRepositori()
-//                            ->getDestacatsByPortalAndTipus($aRetorn['id'],$aObj['name']) ?? "";
-                        $resultat[$kObj]['llistat'] = "llistat";
+                        $resultat[$kObj]['llistat'] = PortalsModel::getDestacatsByPortalAndTipus( $idPortal,$aObj['name']) ?? "";
 
                     } catch (\Throwable $e) {
                         $resultat[$kObj]['error'] = $e->getMessage();
