@@ -39,9 +39,9 @@ class MenusService extends BaseService {
                 $menu['tipus']="2";
                 break;
             case "menuCompartit": //compartit -> no hauria d'arribar mai aqui
-//                $vIdCompartit = $this->getIdCompartitFinal($aRetorn['id_compartit'],$vId);
                 $menu['tipus']="3";
-//                $aRetorn['contingut']=$this->getContingut($vIdCompartit) ?? "";
+                $vIdCompartit = $this->getIdCompartitFinal((int) $menu['id_compartit'],$vIdMenu);
+                $menu['contingut']=$this->getContingut($vIdCompartit,$vIdioma) ?? "";
                 break;
 
             case "llistatDocuments": //llistatdocuments
@@ -119,6 +119,23 @@ class MenusService extends BaseService {
         $aMenu['relacionats'] = $this->getRelacionatsMenu($aMenu,$vIdioma);
 
         return $aMenu;
+    }
+
+    public function getIdCompartitFinal(int $vIdCompartit,int $vIdOrig) {
+        $aRetorn = MenusModel::getMenu($vIdCompartit);
+
+        if (!$aRetorn) {
+            throw new ExceptionApiBase("Menú compartit no trobat",404);
+        }
+
+        if ($aRetorn['gestor'] === 'menuCompartit') {
+            if ((int) $aRetorn['id_compartit'] !== $vIdOrig) {
+                return $this->getIdCompartitFinal((int) $aRetorn['id_compartit'],$vIdOrig);
+            } else {
+                throw new ExceptionApiBase("Bucle de menú compartit ".$vIdOrig,500);
+            }
+        }
+        return $vIdCompartit;
     }
 
     private function getVarsMenu($aMenu) {

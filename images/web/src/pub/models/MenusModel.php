@@ -46,7 +46,7 @@ class MenusModel extends Model
         return new self($db);
     }
 
-    public static function getMenu(int $vId, ?string $vIdioma = "CA"): array
+    public static function getMenu(int $vId, ?string $vIdioma = "CA"): ?array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -83,10 +83,10 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0][0];
+        return $instance->db->execute($aSentencies)[0][0] ?? null;
     }
 
-    public static function getMenusForFilAriadna(int $vId, ?string $vIdioma = "CA")
+    public static function getMenusForFilAriadna(int $vId, ?string $vIdioma = "CA"): ?array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -109,10 +109,10 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0][0];
+        return $instance->db->execute($aSentencies)[0][0] ?? null;
     }
 
-    public static function getMenusByMenuPare(int $vMenuPare, ?int $vPublicatParam = 0, ?string $vOrdreParam = "ASC", string $vIdioma = 'CA')
+    public static function getMenusByMenuPare(int $vMenuPare, ?int $vPublicatParam = 0, ?string $vOrdreParam = "ASC", string $vIdioma = 'CA'): ?array
     {
         $instance = static::createInstance();
 
@@ -159,10 +159,10 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0];
+        return $instance->db->execute($aSentencies)[0] ?? null;
     }
 
-    public static function getMenusByMenuPareForFills(int $vMenuPare,string $vIdioma = 'CA', ?int $vPublicatParam = 0, ?string $vOrdreParam = "ASC")
+    public static function getMenusByMenuPareForFills(int $vMenuPare,string $vIdioma = 'CA', ?int $vPublicatParam = 0, ?string $vOrdreParam = "ASC"): ?array
     {
         $instance = static::createInstance();
 
@@ -233,9 +233,9 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0];
+        return $instance->db->execute($aSentencies)[0] ?? null;
     }
-    public static function getContingut(int $vId, ?string $vIdioma = "CA")
+    public static function getContingut(int $vId, ?string $vIdioma = "CA"): ?array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -270,10 +270,10 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0][0];
+        return $instance->db->execute($aSentencies)[0][0] ?? null;
     }
 
-    public static function getMenusVars(int $vIdMenu)
+    public static function getMenusVars(int $vIdMenu): ?array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -290,10 +290,10 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0];
+        return $instance->db->execute($aSentencies)[0] ?? null;
     }
 
-    public static function getMenusDocuments(int $vIdMenu)
+    public static function getMenusDocuments(int $vIdMenu): ?array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -325,9 +325,9 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0];
+        return $instance->db->execute($aSentencies)[0] ?? null;
     }
-    public static function getCssPag(int $vIdMenu)
+    public static function getCssPag(int $vIdMenu): ?array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -341,7 +341,7 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0][0];
+        return $instance->db->execute($aSentencies)[0][0] ?? null;
     }
 
     private static function getOrdres($vPublicatParam,$vOrdreParam) {
@@ -385,7 +385,7 @@ class MenusModel extends Model
         ];
     }
 
-    public static function getDocument(int $vId)
+    public static function getDocument(int $vId): ?array
     {
         $instance = static::createInstance();
 
@@ -404,10 +404,10 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0];
+        return $instance->db->execute($aSentencies)[0] ?? null;
     }
 
-    public static function getAllDocumentsByMenuPare(int $vMenuPare,int $ordreDesc = 0)
+    public static function getAllDocumentsByMenuPare(int $vMenuPare,int $ordreDesc = 0): ?array
     {
         $instance = static::createInstance();
 
@@ -438,6 +438,6 @@ class MenusModel extends Model
             ]
         ];
 
-        return $instance->db->execute($aSentencies)[0];
+        return $instance->db->execute($aSentencies)[0] ?? null;
     }
 }
