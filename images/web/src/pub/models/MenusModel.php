@@ -308,7 +308,7 @@ class MenusModel extends Model
                         categoria,
                         id_menu,
                         titol,
-                        titol as descripcio,
+                        descripcio,
                         text_boto,
                         url,
                         alt_img,
