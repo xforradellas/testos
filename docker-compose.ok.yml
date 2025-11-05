@@ -29,11 +29,11 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
-  app:
+  test:
     build:
       context: ./images/web
       dockerfile: Dockerfile
-    container_name: app
+    container_name: test
     environment:
       COMPOSER_AUTH: '{"github-oauth": {"github.com": "${githubtoken}"}}'
       DB_HOST: db
@@ -43,25 +43,16 @@ services:
       DB_CHARSET: utf8mb4
       REDIS_HOST: 'redis'
       JWT_URL: 'https://web.manresa.cat/api/usuaris/public_cert.php'
-    expose:
-      - "9000"
+    ports:
+      - 88:80
     depends_on:
       redis:
         condition: service_healthy
       db:
         condition: service_healthy
+
     volumes:
       #allow *.sql, *.sql.gz, or *.sh and is execute only if data directory is empty
       - ./images/web/src/:/var/www/html/src
       - ./images/web/vendor:/var/www/html/vendor/
       - ./images/web/composer.json:/var/www/html/composer.json
-  web:
-    image: nginx:latest
-    container_name: nginx-api
-    ports:
-      - "8080:80"
-    volumes:
-      - ./images/web/src:/var/www/html/src
-      - ./images/web/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app

@@ -1,11 +1,11 @@
 <?php
 
-namespace Ajt\Test\pub\services;
+namespace Ajt\Test\pub\v1\services;
 
 use Ajt\ApiBase\BaseService;
 use Ajt\ApiBase\ExceptionApiBase;
-use Ajt\Test\pub\models\MenusModel;
-use Ajt\Test\pub\models\PortalsModel;
+use Ajt\Test\pub\v1\models\MenusModel;
+use Ajt\Test\pub\v1\models\PortalsModel;
 
 class PortalsService extends BaseService {
 

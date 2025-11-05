@@ -1,10 +1,10 @@
 <?php
-namespace Ajt\Test\pub\controllers;
+namespace Ajt\Test\pub\v1\controllers;
 
 use Ajt\ApiBase\BaseService;
 use Ajt\ApiBase\BaseController;
 use Ajt\ApiBase\Request;
-use Ajt\Test\pub\services\PortalsService;
+use Ajt\Test\pub\v1\services\PortalsService;
 
 
 class PortalsController extends BaseController {

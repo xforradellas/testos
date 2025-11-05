@@ -1,5 +1,5 @@
 <?php
-namespace Ajt\Test\pub\models;
+namespace Ajt\Test\pub\v1\models;
 
 use Ajt\DB\ConexionsDB;
 use Ajt\DB\Model;
