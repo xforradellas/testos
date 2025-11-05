@@ -300,6 +300,7 @@ class MenusModel extends Model
             [
                 "query" =>
                     "SELECT
+                        id,
                         SUBSTRING_INDEX(file, '/', -1) as path,
                         file as path_abs,
                         img as img_abs,
