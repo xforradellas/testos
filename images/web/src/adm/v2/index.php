@@ -1,41 +1,67 @@
 <?php
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../../vendor/autoload.php';
 
 use Ajt\ApiBase\{Response, Router, Request};
-use \Ajt\Test\pub\controllers\HostsController;
-use \Ajt\Test\pub\controllers\PortalsController;
+use \Ajt\Test\adm\v2\controllers\PortalsController;
+use \Ajt\Test\adm\v2\controllers\MenusController;
 use \Ajt\ApiBase\AuthService;
-use \Ajt\Test\pub\controllers\MenusController;
 use \Ajt\DB\Model;
 
 // crem la connexio per defecte a la DB fent servir les variables d'entorn
 $conexio = new \Ajt\DB\ConexionsDB();
 Model::setDefaultDb($conexio);
 
+$arrel="/adm/v2";
 
 $request = new Request();
 
 // creem els controladors que necesitem per cada petició
 $portalsCtrl = new PortalsController();
-//$menusCtrl = new MenusController($conexio);
+$menusCtrl = new MenusController();
 
-$router = new Router();
+
+$tokenValidation = function(array $token) {
+
+    if (!isset($token['idApp']) || $token['idApp'] !== 19) {
+        Response::json(['error' => 'Requereix token (IdApp error)'], 401);
+    }
+    return true;
+};
+
+$auth = new AuthService($tokenValidation);
+
+$router = new Router($auth);
 
 // Definició de rutes (estructura jeràrquica)
-// hosts
-$router->register('GET', '/pub/portals', [$portalsCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
-$router->register('GET', '/pub/portals/{id}', [$portalsCtrl, 'getById'],['cache' => true,'cache_ttl' => 60]);
-//$router->register('GET', '/pub/portals/{id}/menus', [$menusCtrl, 'getAll'],['cache' => true,'cache_ttl' => 60]);
-//$router->register('GET', '/pub/portals/{id}/menus/{idmenu}', [$menusCtrl, 'getById'],['cache' => true,'cache_ttl' => 60]);
-//$router->register('GET', '/pub/portals/{id}/menus/@filariadna', [$menusCtrl, 'getFilAriadna'],['cache' => true,'cache_ttl' => 60]);
+// Portals
+$router->register('GET', $arrel.'/portals',
+    [$portalsCtrl, 'getAll'],
+    ['auth' => true, 'permission' => "portals"]
+);
+$router->register('GET', $arrel.'/portals/{id}',
+    [$portalsCtrl, 'getById'],
+    ['auth' => true, 'permission' => "portals"]
+
+);
+
+// Menus
+$router->register('GET', $arrel.'/portals/{id}/menus',
+    [$menusCtrl, 'getAll']
+);
+$router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}',
+    [$menusCtrl, 'getById']
+);
+$router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}/@filariadna',
+    [$menusCtrl, 'getFilAriadna']
+);
+$router->register('GET', $arrel.'/portals/{id}/ultimesact',
+    [$menusCtrl, 'getUltimesAct']
+);
+$router->register('GET', $arrel.'/portals/{id}/cercar/{cerca}',
+    [$menusCtrl, 'getCerca']
+);
 
 /*
-$router->register('GET', '/hosts/@all', [$hostsCtrl, 'getAll']);
-$router->register('GET', '/hosts/@all/{id}', [$hostsCtrl, 'getById']);
-$router->register('GET', '/hosts/{id}', [$hostsCtrl, 'getById']);
-$router->register('POST', '/hosts', [$hostsCtrl, 'create']);
-$router->register('PUT', '/hosts/{id}', [$hostsCtrl, 'update']);
-$router->register('DELETE', '/hosts/{id}', [$hostsCtrl, 'deleteUpdate']);
 
 // portals
 $router->register('GET', '/portals', [$portalsCtrl, 'getAll'],[
