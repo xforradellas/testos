@@ -34,15 +34,11 @@ $router = new Router($auth);
 
 // Definició de rutes (estructura jeràrquica)
 // Portals
-$router->register('GET', $arrel.'/portals',
-    [$portalsCtrl, 'getAll'],
-    ['auth' => true, 'permission' => "portals"]
-);
-$router->register('GET', $arrel.'/portals/{id}',
-    [$portalsCtrl, 'getById'],
-    ['auth' => true, 'permission' => "portals"]
-
-);
+$router->register('GET', $arrel.'/portals', [$portalsCtrl, 'getAll'], ['auth' => true, 'permission' => "portals"]);
+$router->register('GET', $arrel.'/portals/{id}', [$portalsCtrl, 'getById'], ['auth' => true, 'permission' => "portals"]);
+$router->register('POST', $arrel.'/portals', [$portalsCtrl, 'add'], ['auth' => true, 'permission' => "portals"]);
+$router->register('PUT', $arrel.'/portals/{id}', [$portalsCtrl, 'update'], ['auth' => true, 'permission' => "portals"]);
+$router->register('DELETE', $arrel.'/portals/{id}', [$portalsCtrl, 'delete'], ['auth' => true, 'permission' => "portals"]);
 
 // Menus
 $router->register('GET', $arrel.'/portals/{id}/menus',

@@ -27,33 +27,10 @@ class PortalsController extends BaseController {
 
     }
 
-    private function tePermisRoot($permisos):bool {
-        $permisos_root = $permisos->root ?? "";
-//        $permisos_portals = $permisos->portal ?? "";
-
-        if ($permisos_root === "*") {
-            return true;
-        }
-
-        $allowedIdsRoot = array_map('trim', explode(',', $permisos_root));
-        $result = in_array((string)$resourceId, $allowedIdsRoot, true);
-//        $allowedIdsPortal = array_map('trim', explode(',', $permisos_portals));
-    }
-
     public function getAll(Request $req,$params,$token) {
         $permisos = $token['permisos'];
 
         $aRetorn = $this->service->getAllPortals($permisos);
-//        $permisos_root = $permisos->root ?? "";
-//        $permisos_portals = $permisos->portal ?? "";
-//
-//        // si tenim permis per tots els portals
-//        if ($permisos_portals === "*") {
-//            $aRetorn = $this->service->getAll();
-//        } else {
-//            $aRetorn = [];
-//        }
-
 
         return [
             "dades" => $aRetorn,
@@ -63,6 +40,49 @@ class PortalsController extends BaseController {
 
     }
 
+    public function add(Request $req,$params,$token) {
+        $data = $req->body['obj'];
 
+        $data['id_menu_principal'] = 0;
+        $data['version_admin'] = 0;
 
+        // creem portal
+        $aRetorn = $this->service->create($data);
+
+        return [
+            "dades" => $aRetorn,
+            "total" => 1,
+            "date" => date("Y-m-d H:i:s")
+        ];
+
+    }
+
+    public function update(Request $req,$params,$token) {
+        $id = $params['id'] ?? null;
+        $data = $req->body['obj'];
+
+        // creem portal
+        $aRetorn = $this->service->update($id,$data);
+
+        return [
+            "dades" => $aRetorn,
+            "total" => 1,
+            "date" => date("Y-m-d H:i:s")
+        ];
+
+    }
+
+    public function delete(Request $req,$params,$token) {
+        $id = $params['id'] ?? null;
+
+        // creem portal
+        $aRetorn = $this->service->delete($id);
+
+        return [
+            "dades" => $aRetorn,
+            "total" => 1,
+            "date" => date("Y-m-d H:i:s")
+        ];
+
+    }
 }

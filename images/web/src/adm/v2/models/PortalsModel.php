@@ -15,7 +15,7 @@ class PortalsModel extends Model
     public ?string $web_dir;
     public ?string $meta_description;
     public ?int $id_menu_principal;
-    public ?int $mides_img_fons;
+    public ?string $mides_img_fons;
     public ?string $mides_img_default;
     public ?string $version_admin;
 
