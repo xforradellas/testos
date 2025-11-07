@@ -3,6 +3,7 @@ namespace Ajt\Test\adm\v2\controllers;
 
 use Ajt\ApiBase\BaseService;
 use Ajt\ApiBase\BaseController;
+use Ajt\ApiBase\ExceptionApiBase;
 use Ajt\ApiBase\Request;
 use Ajt\Test\adm\v2\services\PortalsService;
 
@@ -43,9 +44,6 @@ class PortalsController extends BaseController {
     public function add(Request $req,$params,$token) {
         $data = $req->body['obj'];
 
-        $data['id_menu_principal'] = 0;
-        $data['version_admin'] = 0;
-
         // creem portal
         $aRetorn = $this->service->create($data);
 
@@ -60,7 +58,9 @@ class PortalsController extends BaseController {
     public function update(Request $req,$params,$token) {
         $id = $params['id'] ?? null;
         $data = $req->body['obj'];
-
+        if ($id !== $data['id']) {
+            throw new ExceptionApiBase("Ids no coindideixen",500);
+        }
         // creem portal
         $aRetorn = $this->service->update($id,$data);
 

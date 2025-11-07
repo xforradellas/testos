@@ -14,10 +14,10 @@ class PortalsModel extends Model
     public ?int $actiu;
     public ?string $web_dir;
     public ?string $meta_description;
-    public ?int $id_menu_principal;
+    public ?int $id_menu_principal = 0;
     public ?string $mides_img_fons;
     public ?string $mides_img_default;
-    public ?string $version_admin;
+    public ?int $version_admin = 0;
 
     protected static function createInstance(?ConexionsDB $db = null): static
     {
