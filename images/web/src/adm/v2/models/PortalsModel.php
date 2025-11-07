@@ -51,7 +51,7 @@ class PortalsModel extends Model
         return $instance->db->execute($aSentencies)[0] ?? [];
     }
 
-    public static function getI18nByPortal(int $vIdPortal)
+    public static function getI18nByPortal(int $vIdPortal): array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -70,7 +70,7 @@ class PortalsModel extends Model
         return $instance->db->execute($aSentencies)[0];
     }
 
-    public static function getTipusDescriptors(int $vIdPortal)
+    public static function getTipusDescriptors(int $vIdPortal): array
     {
         $instance = static::createInstance();
         $aSentencies = [
@@ -113,5 +113,4 @@ class PortalsModel extends Model
 
         return $instance->db->execute($aSentencies)[0] ?? [];
     }
-
 }

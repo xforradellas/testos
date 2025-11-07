@@ -10,7 +10,7 @@ class PortalsService extends BaseService {
     /** @var class-string<PortalsModel> */
     protected string $modelClass = PortalsModel::class;
 
-    public function getAllPortals($permisos) {
+    public function getAllPortals(array $permisos):array {
 
         // recuperem tots els portals
         $resultat = PortalsModel::getAllPortals();
@@ -31,7 +31,7 @@ class PortalsService extends BaseService {
         return $resultat;
     }
 
-    private function calcularPermisos($vId,$permisos) {
+    private function calcularPermisos(int $vId,array $permisos): int {
         $permis = 0;
         if ($this->tePermis($permisos, "root", $vId)) {
             $permis = 3;
@@ -46,7 +46,7 @@ class PortalsService extends BaseService {
 
         return $permis;
     }
-    private function calcularPermisosPlantilla($vId,$permisos) {
+    private function calcularPermisosPlantilla(int $vId,array $permisos): int {
         $permis = 0;
         if ($this->tePermis($permisos, "plantilles", $vId)) {
             $permis = 1;
@@ -54,6 +54,4 @@ class PortalsService extends BaseService {
 
         return $permis;
     }
-
-
 }
