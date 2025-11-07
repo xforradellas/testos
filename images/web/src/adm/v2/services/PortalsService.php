@@ -55,25 +55,5 @@ class PortalsService extends BaseService {
         return $permis;
     }
 
-    /**
-     * @param $permisos
-     * @param $nom_permis
-     * @param $id
-     * @param $validar 'tot'|'*' -> validem totes les opcions o només les *
-     * @return bool
-     */
-    private function tePermis($permisos,$nom_permis,$id,$validar = 'tot'):bool {
-        $permisAct = $permisos->$nom_permis ?? "";
-        // si el permis te *
-        if ($permisAct === "*") {
-            return true;
-        } elseif ($validar !== 'tot' || $permisAct === '') {
-            // si no hi ha el permis definit sortim
-            // si no volem fer totes les comprovacions, només volem fer les * sortim
-            return false;
-        }
 
-        $ids = array_map('trim', explode(',', $permisAct));
-        return in_array((string)$id, $ids, true);
-    }
 }
