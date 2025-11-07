@@ -17,7 +17,7 @@ class PortalsController extends BaseController {
         parent::__construct($service ?? new PortalsService());
     }
 
-    public function getById(Request $req, $params)
+    public function getById(Request $req, array $params):array
     {
         $id = $params['id'] ?? null;
         return [
@@ -28,7 +28,7 @@ class PortalsController extends BaseController {
 
     }
 
-    public function getAll(Request $req,$params,$token) {
+    public function getAll(Request $req,array $params,array $token):array {
         $permisos = $token['permisos'];
 
         $aRetorn = $this->service->getAllPortals($permisos);
@@ -41,7 +41,7 @@ class PortalsController extends BaseController {
 
     }
 
-    public function add(Request $req,$params,$token) {
+    public function add(Request $req,array $params,array $token): array {
         $data = $req->body['obj'];
 
         // creem portal
@@ -55,7 +55,7 @@ class PortalsController extends BaseController {
 
     }
 
-    public function update(Request $req,$params,$token) {
+    public function update(Request $req,array $params,array $token):array {
         $id = $params['id'] ?? null;
         $data = $req->body['obj'];
         if ($id !== $data['id']) {
@@ -72,7 +72,7 @@ class PortalsController extends BaseController {
 
     }
 
-    public function delete(Request $req,$params,$token) {
+    public function delete(Request $req,array $params,array $token):array {
         $id = $params['id'] ?? null;
 
         // creem portal
