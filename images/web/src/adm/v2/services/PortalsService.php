@@ -6,7 +6,8 @@ use Ajt\ApiBase\BaseService;
 use Ajt\Test\adm\v2\models\PortalsModel;
 
 class PortalsService extends BaseService {
-
+    const ERROR_NO_TROBAT = "Portal no trobat";
+    const API = "adm/v2/portals";
     /** @var class-string<PortalsModel> */
     protected string $modelClass = PortalsModel::class;
 

@@ -32,6 +32,26 @@ $auth = new AuthService($tokenValidation);
 
 $router = new Router($auth);
 
+$functionValidacioPortalMenu = function($request, $matches) use ($auth) {
+    // Validar dos permisos distintos:
+    $okPortal = $auth->hasPermission('portals', $matches['id'] ?? null);
+
+    //tinc de revisar si tinc permisos al pare
+//    $okMenu   = $auth->hasPermission('menus', $matches['id'] ?? null, $matches['idMenu'] ?? null);
+    $okMenu = true;
+    return $okPortal && $okMenu;
+};
+
+//'permission_validator' => function($request, $matches) use ($auth) {
+//    // Validar dos permisos distintos:
+//    $okPortal = $auth->hasPermission('portal', $matches['id'] ?? null);
+//    $okHost   = $auth->hasPermission('portalroot', $matches['idhost'] ?? null);
+//
+//    return $okPortal && $okHost;
+//}
+
+
+
 // Definició de rutes (estructura jeràrquica)
 // Portals
 $router->register('GET', $arrel.'/portals', [$portalsCtrl, 'getAll'], ['auth' => true, 'permission' => "portals"]);
@@ -41,21 +61,26 @@ $router->register('PUT', $arrel.'/portals/{id}', [$portalsCtrl, 'update'], ['aut
 $router->register('DELETE', $arrel.'/portals/{id}', [$portalsCtrl, 'delete'], ['auth' => true, 'permission' => "portals"]);
 
 // Menus
-$router->register('GET', $arrel.'/portals/{id}/menus',
-    [$menusCtrl, 'getAll']
+$router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}', [$menusCtrl, 'getById'], ['auth' => true, 'permission' => "menus",
+    'permission_validator' => $functionValidacioPortalMenu
+    ]
 );
-$router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}',
-    [$menusCtrl, 'getById']
+$router->register('GET', $arrel.'/portals/{id}/menus', [$menusCtrl, 'getByPortal'],
+    ['auth' => true, 'permission' => "menus",
+            'permission_validator' => $functionValidacioPortalMenu
+    ]
 );
-$router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}/@filariadna',
-    [$menusCtrl, 'getFilAriadna']
-);
-$router->register('GET', $arrel.'/portals/{id}/ultimesact',
-    [$menusCtrl, 'getUltimesAct']
-);
-$router->register('GET', $arrel.'/portals/{id}/cercar/{cerca}',
-    [$menusCtrl, 'getCerca']
-);
+//
+//
+//$router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}/@filariadna',
+//    [$menusCtrl, 'getFilAriadna']
+//);
+//$router->register('GET', $arrel.'/portals/{id}/ultimesact',
+//    [$menusCtrl, 'getUltimesAct']
+//);
+//$router->register('GET', $arrel.'/portals/{id}/cercar/{cerca}',
+//    [$menusCtrl, 'getCerca']
+//);
 
 /*
 

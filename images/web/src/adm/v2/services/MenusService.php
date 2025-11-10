@@ -8,263 +8,157 @@ use Ajt\Test\adm\v2\models\MenusModel;
 
 class MenusService extends BaseService {
 
+    const ERROR_NO_TROBAT = "Menú no trobat";
+    const ERROR_INESPERAT = "Error inesperat";
+    const API = "adm/v2/portals/x/menus";
+
     /** @var class-string<MenusModel> */
     protected string $modelClass = MenusModel::class;
     // Aquí pots afegir lògica extra si cal
 
-    public function getById(int $vIdPortal,int $vIdMenu,string $vIdioma) {
+    public function getById(int $vIdPortal,int $vIdMenu, $permisos): array {
 
+        //validem que existeixi el portal
         $portalSvc=new PortalsService();
-        $portal = $portalSvc->find($vIdPortal);
-        $menu = MenusModel::getMenu($vIdMenu,$vIdioma);
+        $portalSvc->find($vIdPortal);
+
+        $menu = MenusModel::getMenu($vIdMenu);
         if (!$menu) {
-            throw new ExceptionApiBase("No trobat",404);
-        }
-        $idMenuPrincipal = $portal->id_menu_principal;
-
-        switch($menu['gestor']) {
-
-            case "article": // article
-                $menu['tipus']="1";
-                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
-                break;
-            case "articleJSON": // article
-                $menu['tipus']="7";
-                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
-                break;
-            case "enllac": //
-                $menu['tipus']="2";
-                break;
-            case "menuCompartit": //compartit -> no hauria d'arribar mai aqui
-                $menu['tipus']="3";
-                $vIdCompartit = $this->getIdCompartitFinal((int) $menu['id_compartit'],$vIdMenu);
-                $menu['contingut']=$this->getContingut($vIdCompartit,$vIdioma) ?? "";
-                break;
-
-            case "llistatDocuments": //llistatdocuments
-                $menu['tipus']="4";
-                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
-                $menu['documents']=$this->getDocsByMenuPare($aRetorn['id_arxius']) ?? "";
-
-                break;
-            case "album": // Album ??
-                $menu['tipus']="5";
-                break;
-            case "codi": //codi
-                $menu['tipus']="6";
-                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
-                break;
-            default:
-                // sense acció
-                $menu['contingut']=$this->getContingut($vIdMenu,$vIdioma) ?? "";
-                break;
+            throw new ExceptionApiBase(static::ERROR_NO_TROBAT,404);
         }
 
-        $menu['filAriadna'] = $this->getFilAriadna($vIdMenu,$idMenuPrincipal,$vIdioma);
+        $menu['docs'] = MenusModel::getDocumentsByIdMenu($vIdMenu) ?? [];
+        $menu['vars'] = MenusModel::getVarsByIdMenu($vIdMenu) ?? [];
+        $menu['descriptors'] = MenusModel::getDescriptorsByIdMenu($vIdMenu) ?? [];
+        // afegir retornar idiomes
+        // faltaria agrupar-ho per idiomes
+        $menu['i18n'] = MenusModel::getI18nByIdMenu($vIdMenu) ?? [];
+        $menu['fills'] = MenusModel::getMenusByMenuPare($vIdMenu) ?? [];
+
+        if (!empty($menu['fills'])) {
+            foreach($menu['fills'] as &$aFill) {
+                $aFill['vars'] = MenusModel::getVarsByIdMenu($aFill['id']) ?? [];
+            }
+        }
+
+        $menu['permis_plantilla'] = $this->tePermis((object) ($permisos ??  []), "plantilles", $vIdPortal) ?? 0;
+
+        $menu['errors'] = [];
+
+        $error = $this->validarIdioma($vIdPortal,$menu['i18n'],$menu['data_mod_contingut']);
+        if ($error) {
+            $menu['errors'] = $error;
+        }
+
+        $error = $this->validarCompartit($menu);
+        if ($error) {
+            $menu['errors'][] = $error;
+        }
 
         return $menu;
     }
-    public function getNodeByMenuPare($vMenuPare,$vIdioma) {
 
-        $aRetorn = MenusModel::getMenusByMenuPare($vMenuPare,null,null,$vIdioma) ?? [];
-
-        if (!empty($aRetorn)) {
-            foreach($aRetorn as $vKey => $aObj) {
-                if ($aObj['te_fills'] == 1) {
-                    $aRetorn[$vKey]['fills'] = $this->getNodeByMenuPare($aObj['id'],$vIdioma);
-                }
-
-            }
+    private function validarCompartit(array $menu):?string {
+        if ($menu['gestor'] == 'menuCompartit' && $menu['id_portal'] != $menu['id_portal_compartit']) {
+            return "El contingut compartit ha de ser del mateix portal";
         }
-
-        return $aRetorn;
+        return null;
     }
 
-    public  function getUltimesAct(int $vIdPortal)
+    private function validarIdioma(int|string $idPortal, array $idiomesMenu, ?string $dataModContingut): ?array
     {
-        return MenusModel::getMenusUltimesActualitzacions($vIdPortal);
-    }
+        $idiomesPortal = MenusModel::getI18nByPortal($idPortal);
+        if (empty($idiomesPortal)) {return null;}
 
-    public  function getCercaByPortal(int $vIdPortal,string $vCerca,string $vIdioma = "CA"): ?array
-    {
-        return MenusModel::getCercaByPortal($vIdPortal,$vCerca,$vIdioma);
-    }
-    public function getFilAriadna (int $id,int $idArrel,string $vIdioma = "CA",int $posicio = 0) {
-        // si l'arrel i el id són iguals tornem array buit
+        $errors = array_reduce($idiomesPortal, function($carry, $idiomaPortal) use ($idiomesMenu, $dataModContingut) {
+            $idioma = $idiomaPortal['idioma'];
+            $idiomaMenu = current(array_filter($idiomesMenu, fn($i) => $i['idioma'] === $idioma));
 
-        if ($id === $idArrel || $id < 1) {
-            return [];
-        }
-        //recuperem l'id actual
-        $aResult = MenusModel::getMenusForFilAriadna($id,$vIdioma) ?? [];
-        //mirem si l'identificador és més gran de 0 ( el primer)
-        //controlem que no fem més de 100 iteracions, això seria un bucle infinit
-        if (!empty($aResult) && $posicio < 100) {
-            $aRetorn = $this->getFilAriadna($aResult['menu_pare'],$idArrel,$posicio+1);
-            if (!empty($aResult)) {
-                $aRetorn[] = [
-                    'id' => $aResult['id'],
-                    'idseo' => $aResult['idseo'],
-                    'titol' => $aResult['titol']
-                ];
+            if (!$idiomaMenu) {
+                $carry[] = "Falta la traducció a l’idioma {$idioma}.";
+            } elseif (($idiomaMenu['estat'] ?? '') !== 'Revisat') {
+                $carry[] = "La traducció automàtica a l’idioma {$idioma} s’ha de revisar.";
             }
-        }
 
-        return $aRetorn ?? [];
-    }
-
-    public  function getContingut($vIdMenu,$vIdioma = "CA") {
-        $aMenu = MenusModel::getContingut($vIdMenu,$vIdioma);
-        if (!$aMenu) {
-            throw new ExceptionApiBase("No trobat",404);
-        }
-
-        $aMenu['vars'] = $this->getVarsMenu($aMenu);
-        $aMenu['documents'] = $this->getDocsMenu($aMenu);
-        $aMenu['fills'] = $this->getFillsMenu($aMenu,$vIdioma);
-        $aMenu['relacionats'] = $this->getRelacionatsMenu($aMenu,$vIdioma);
-
-        return $aMenu;
-    }
-
-    public function getIdCompartitFinal(int $vIdCompartit,int $vIdOrig) {
-        $aRetorn = MenusModel::getMenu($vIdCompartit);
-
-        if (!$aRetorn) {
-            throw new ExceptionApiBase("Menú compartit no trobat",404);
-        }
-
-        if ($aRetorn['gestor'] === 'menuCompartit') {
-            if ((int) $aRetorn['id_compartit'] !== $vIdOrig) {
-                return $this->getIdCompartitFinal((int) $aRetorn['id_compartit'],$vIdOrig);
-            } else {
-                throw new ExceptionApiBase("Bucle de menú compartit ".$vIdOrig,500);
+            if ($dataModContingut && $idiomaMenu && $dataModContingut > ($idiomaMenu['data_mod'] ?? '')) {
+                $carry[] = "El contingut s’ha modificat després de la darrera revisió de {$idioma}.";
             }
-        }
-        return $vIdCompartit;
+
+            return $carry;
+        }, []);
+
+        return $errors ?: null;
     }
 
-    private function getVarsMenu($aMenu) {
-        $aVars = MenusModel::getMenusVars($aMenu['id']) ?? [];
-        $aResult = [];
+    public function getByPortal(int $vIdPortal,?object $permisos): array {
+        //validem que existeixi el portal
+        $portalSvc=new PortalsService();
+        $portalSvc->find($vIdPortal);
 
-        foreach($aVars as $aVar) {
+        $vCalcularPermis = false;
 
-            // no contem la variable id_contingut, per no fer el contingut més petit sense necesitat
-            if ($aVar['param'] !== 'id_contingut') {
-                $aResult[$aVar['param']] = $aVar['valor'];
-            }
+        // pot accedir a tots els menus del portal idPortal#*
+        if ($this->tePermis($permisos,"menus",$vIdPortal,'*')) {
+            $IdMenus = 0;
+        } else {
+            $IdMenus = $this->getPermisosMenusByPortal($permisos->menus,$vIdPortal);
+            $vCalcularPermis = true;
         }
+        $menus = MenusModel::getMenusByIdPortal($vIdPortal,$IdMenus);
+        if ($menus) {
+            foreach ($menus  as &$menu) {
+                if ($vCalcularPermis) {
+                    $this->calcularPermis($menus, $menu);
+                }
+                $menu['errors'] = [];
+                $menu['i18n'] = MenusModel::getI18nByPortal($menu['id']) ?? [];
+                $menu['descriptors'] = MenusModel::getDescriptorsByIdMenu($menu['id']) ?? [];
+                $error = $this->validarIdioma($vIdPortal,$menu['i18n'],$menu['data_mod_contingut']);
+                if ($error) {
+                    $menu['errors'] = $error;
+                }
 
-        $vCssPagTrobat = false;
-        if (!empty($aResult['css_pag'])) {
-            $vCssPagTrobat = true;
-        }
-
-        if (!$vCssPagTrobat) {
-            //mirem si el pare té css_pag
-            $vCssPag = MenusModel::getCssPag($aMenu['id'])['css_pag'] ?? '';
-            $aResult['css_pag'] = $vCssPag;
-        }
-
-        // no contem el css_pag. El total el fem servir per saber si tenim variables que es mostren en pantalla i s'ha de modificar la pantalla
-        $aResult['total'] = sizeof($aResult) - 1;
-
-        return $aResult ?? [];
-    }
-
-    private function getDocsByMenuPare($vMenuPare) {
-        if ($vMenuPare != 0) {
-            $aRetorn = MenusModel::getDocument($vMenuPare);
-            if (!$aRetorn) {
-                throw new ExceptionApiBase("Menú pare no trobat",404);
-            }
-        }
-
-        $ordreDesc = $aRetorn['ordreDescendent'] ?? 0;
-
-        return $this->getNodeDocByMenuPare((int) $vMenuPare,(int) $ordreDesc);
-    }
-
-    private function getNodeDocByMenuPare(int $vMenuPare,int $ordreDesc) {
-
-        $aRetorn = MenusModel::getAllDocumentsByMenuPare($vMenuPare,$ordreDesc);
-
-        if ($aRetorn) {
-            foreach($aRetorn as $vKey => $aObj) {
-                if ($aObj['tipus'] == 'C' && $aObj['te_fills'] == 1) {
-                    $aRetorn[$vKey]['items'] = $this->getNodeDocByMenuPare($aObj['id'],$aObj['ordreDescendent']);
+                $error = $this->validarCompartit($menu);
+                if ($error) {
+                    $menu['errors'][] = $error;
                 }
             }
         }
 
-        return $aRetorn;
+        return $menus;
     }
 
-    private function getDocsMenu($aMenu) {
-        $aDocuments = MenusModel::getMenusDocuments((int) $aMenu['id']) ?? [];
-        $aResult = [];
+    private function getPermisosMenusByPortal($permisos, $idPortal) {
+        $result = [];
 
-        if (!empty($aDocuments)) {
-
-            $aResult = [
-                'imatges'      => [],
-                'documents'    => [],
-                'enllacos'     => [],
-                'enllacos_img' => [],
-            ];
-
-            foreach ($aDocuments as $obj) {
-                $categoria = $obj['categoria'] ?? '';
-                $tipus     = $obj['tipus'] ?? '';
-                $path      = $obj['path'] ?? '';
-
-                // Classificació especial
-                if ($categoria === 'img' || ($categoria === '' && $tipus === 'img')) {
-                    $aResult['imatges'][] = $obj;
-                } elseif ($categoria === 'pdf' || ($categoria === '' && $tipus === 'pdf')) {
-                    $aResult['documents'][] = $obj;
-                } elseif (($categoria === 'lnk' || ($categoria === '' && $tipus === 'lnk')) && $path === '') {
-                    $aResult['enllacos'][] = $obj;
-                } elseif (($categoria === 'lnk' || ($categoria === '' && $tipus === 'lnk')) && $path !== '') {
-                    $aResult['enllacos_img'][] = $obj;
-                } else {
-                    // Altres categories automàtiques
-                    $nomCategoria = $categoria ?: $tipus ?: 'altres';
-                    $aResult[$nomCategoria][] = $obj;
-                }
+        $permisos = explode(",",$permisos);
+        foreach ($permisos as $item) {
+            // Separar per '#'
+            [$p, $valor] = explode('#', $item);
+            if ($p === (string)$idPortal) {
+                $result[] = $valor;
             }
         }
 
-        return $aResult ?? [];
+        // Retornar els valors separats per coma
+        return implode(',', $result);
     }
 
-    private function getFillsMenu(array $aMenu,string $vIdioma) {
+    private function calcularPermis(&$aMenus,&$aMenu) {
 
-        // ordre en que s'ordenaran els menus del contingut
-        // (ASC: 1...9, DESC: 9...1, ALF_ASC: A...Z, ALF_DESC: Z...A,
-        // DATA_ASC: 01/01/1900...31/12/2020, DATA_DESC: 31/12/2020...01/01/1900)
-        $vOrdre = $aMenu['format_fills'] == 3 ? 'DATA_ASC' : 'ASC';
-
-        $aResult = MenusModel::getMenusByMenuPareForFills($aMenu['id'],$vIdioma,0,$vOrdre) ?? [];
-        foreach($aResult as &$aMenuFills) {
-            $aMenuFills['vars'] = $this->getVarsMenu($aMenuFills);
-            $aMenuFills['vars']['total'] = sizeof($aMenuFills['vars']);
+        // Calcular si tiene hijos con permisos
+        $aMenu['fillsAmbPermis'] = $aMenu['fillsAmbPermis'] ?? 0;
+        if ($aMenu['permis'] == 1) {
+            $this->modificarPermisPare($aMenus,$aMenu['menu_pare']);
         }
-
-        return $aResult ?? [];
-
     }
 
-    private function getRelacionatsMenu(array $aMenu,string $vIdioma) {
-
-        $aResult = MenusModel::getMenusByMenuPareForFills($aMenu['menu_pare'],$vIdioma) ?? [];
-        foreach($aResult as &$aMenuRel) {
-            $aMenuRel['vars'] = $this->getVarsMenu($aMenuRel);
-            $aMenuRel['vars']['total'] = sizeof($aMenuRel['vars']);
+    private function modificarPermisPare(&$aMenus,$vIdMenuPare) {
+        foreach ($aMenus as &$menu) {
+            if ($menu['id'] == $vIdMenuPare) {
+                $menu['fillsAmbPermis'] = 1;
+                $this->modificarPermisPare($aMenus,$menu['menu_pare']);
+            }
         }
-
-        return $aResult ?? [];
-
     }
 }

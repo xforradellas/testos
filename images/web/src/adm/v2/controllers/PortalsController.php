@@ -58,7 +58,8 @@ class PortalsController extends BaseController {
     public function update(Request $req,array $params,array $token):array {
         $id = $params['id'] ?? null;
         $data = $req->body['obj'];
-        if ($id !== $data['id']) {
+
+        if ((int)$id !== (int) $data['id']) {
             throw new ExceptionApiBase("Ids no coindideixen",500);
         }
         // creem portal
