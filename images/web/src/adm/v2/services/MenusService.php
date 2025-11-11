@@ -58,6 +58,117 @@ class MenusService extends BaseService {
         return $menu;
     }
 
+    public function getByPortal(int $vIdPortal,?object $permisos): array {
+        //validem que existeixi el portal
+        $portalSvc=new PortalsService();
+        $portalSvc->find($vIdPortal);
+
+        $vCalcularPermis = false;
+
+        $IdMenus = $this->getMenusAmbPermis($permisos,$vIdPortal);
+        if ($IdMenus !== '0') {
+            $vCalcularPermis = true;
+        }
+
+        $menus = MenusModel::getMenusByIdPortal($vIdPortal,$IdMenus);
+        if ($menus) {
+            foreach ($menus  as &$menu) {
+                if ($vCalcularPermis) {
+                    $this->modificarPermisosPare($menus, $menu);
+                }
+                $menu['errors'] = [];
+                $menu['i18n'] = MenusModel::getI18nByPortal($menu['id']) ?? [];
+                $menu['descriptors'] = MenusModel::getDescriptorsByIdMenu($menu['id']) ?? [];
+                $error = $this->validarIdioma($vIdPortal,$menu['i18n'],$menu['data_mod_contingut']);
+                if ($error) {
+                    $menu['errors'] = $error;
+                }
+
+                $error = $this->validarCompartit($menu);
+                if ($error) {
+                    $menu['errors'][] = $error;
+                }
+            }
+        }
+
+        return $menus;
+    }
+
+    public function validarMenuPermis(object $permisos,int $vIdPortal,?int $vIdMenu): bool {
+        $tePermisPortal = false;
+        if($vIdMenu) {
+            //mirem si el menu existeix
+            $this->find($vIdMenu);
+        }
+        $vIdMenusAmbPermis = $this->getMenusAmbPermis($permisos,$vIdPortal);
+        if ($vIdMenusAmbPermis !== null) {
+            $tePermisPortal = true;
+        }
+        if ($vIdMenu) {
+            $permisMenu = MenusModel::validarPermisos($vIdPortal,$vIdMenu,$vIdMenusAmbPermis);
+            $tePermisMenu = ((int) $permisMenu['permis'] ?? 0) === 1;
+        } else {
+            // si no tenim cap menu ś un llistat de menús i li deixem permís
+            $tePermisMenu = true;
+        }
+
+        return $tePermisPortal && $tePermisMenu;
+    }
+    private function getMenusAmbPermis(object $permisos, $vIdPortal) {
+        if ($this->tePermis($permisos,"menus",$vIdPortal,'*')) {
+            $IdMenus = "0";
+        } else {
+            $IdMenus = $this->getPermisosMenusByPortal($permisos->menus,$vIdPortal);
+        }
+
+        return $IdMenus;
+    }
+    private function getPermisosMenusByPortal($permisos, $idPortal) {
+        $result = [];
+
+        $permisos = explode(",",$permisos);
+        foreach ($permisos as $item) {
+            // Separar per '#'
+            [$p, $valor] = explode('#', $item);
+            if ($p === (string)$idPortal) {
+                $result[] = $valor;
+            }
+        }
+
+        // Retornar els valors separats per coma
+        return implode(',', $result);
+    }
+
+    /**
+     * Mirem si tenim fills amb permisos, per poder desplegar el menú
+     * @param $aMenus
+     * @param $aMenu
+     * @return void
+     */
+    private function modificarPermisosPare(&$aMenus,&$aMenu) {
+
+        // Calcular si tiene hijos con permisos
+        $aMenu['fillsAmbPermis'] = $aMenu['fillsAmbPermis'] ?? 0;
+        if ($aMenu['permis'] == 1) {
+            $this->modificarPermisPare($aMenus,$aMenu['menu_pare']);
+        }
+    }
+
+    /**
+     * Modifica el menú pare per indicar que té fills amb permisos
+     * @param $aMenus
+     * @param $vIdMenuPare
+     * @return void
+     */
+    private function modificarPermisPare(&$aMenus,$vIdMenuPare) {
+        foreach ($aMenus as &$menu) {
+            if ($menu['id'] == $vIdMenuPare) {
+                $menu['fillsAmbPermis'] = 1;
+                $this->modificarPermisPare($aMenus,$menu['menu_pare']);
+            }
+        }
+    }
+
     private function validarCompartit(array $menu):?string {
         if ($menu['gestor'] == 'menuCompartit' && $menu['id_portal'] != $menu['id_portal_compartit']) {
             return "El contingut compartit ha de ser del mateix portal";
@@ -88,77 +199,5 @@ class MenusService extends BaseService {
         }, []);
 
         return $errors ?: null;
-    }
-
-    public function getByPortal(int $vIdPortal,?object $permisos): array {
-        //validem que existeixi el portal
-        $portalSvc=new PortalsService();
-        $portalSvc->find($vIdPortal);
-
-        $vCalcularPermis = false;
-
-        // pot accedir a tots els menus del portal idPortal#*
-        if ($this->tePermis($permisos,"menus",$vIdPortal,'*')) {
-            $IdMenus = 0;
-        } else {
-            $IdMenus = $this->getPermisosMenusByPortal($permisos->menus,$vIdPortal);
-            $vCalcularPermis = true;
-        }
-        $menus = MenusModel::getMenusByIdPortal($vIdPortal,$IdMenus);
-        if ($menus) {
-            foreach ($menus  as &$menu) {
-                if ($vCalcularPermis) {
-                    $this->calcularPermis($menus, $menu);
-                }
-                $menu['errors'] = [];
-                $menu['i18n'] = MenusModel::getI18nByPortal($menu['id']) ?? [];
-                $menu['descriptors'] = MenusModel::getDescriptorsByIdMenu($menu['id']) ?? [];
-                $error = $this->validarIdioma($vIdPortal,$menu['i18n'],$menu['data_mod_contingut']);
-                if ($error) {
-                    $menu['errors'] = $error;
-                }
-
-                $error = $this->validarCompartit($menu);
-                if ($error) {
-                    $menu['errors'][] = $error;
-                }
-            }
-        }
-
-        return $menus;
-    }
-
-    private function getPermisosMenusByPortal($permisos, $idPortal) {
-        $result = [];
-
-        $permisos = explode(",",$permisos);
-        foreach ($permisos as $item) {
-            // Separar per '#'
-            [$p, $valor] = explode('#', $item);
-            if ($p === (string)$idPortal) {
-                $result[] = $valor;
-            }
-        }
-
-        // Retornar els valors separats per coma
-        return implode(',', $result);
-    }
-
-    private function calcularPermis(&$aMenus,&$aMenu) {
-
-        // Calcular si tiene hijos con permisos
-        $aMenu['fillsAmbPermis'] = $aMenu['fillsAmbPermis'] ?? 0;
-        if ($aMenu['permis'] == 1) {
-            $this->modificarPermisPare($aMenus,$aMenu['menu_pare']);
-        }
-    }
-
-    private function modificarPermisPare(&$aMenus,$vIdMenuPare) {
-        foreach ($aMenus as &$menu) {
-            if ($menu['id'] == $vIdMenuPare) {
-                $menu['fillsAmbPermis'] = 1;
-                $this->modificarPermisPare($aMenus,$menu['menu_pare']);
-            }
-        }
     }
 }

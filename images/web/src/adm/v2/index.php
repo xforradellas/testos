@@ -6,6 +6,7 @@ use \Ajt\Test\adm\v2\controllers\PortalsController;
 use \Ajt\Test\adm\v2\controllers\MenusController;
 use \Ajt\ApiBase\AuthService;
 use \Ajt\DB\Model;
+use Ajt\Test\adm\v2\services\MenusService;
 
 // crem la connexio per defecte a la DB fent servir les variables d'entorn
 $conexio = new \Ajt\DB\ConexionsDB();
@@ -18,6 +19,7 @@ $request = new Request();
 // creem els controladors que necesitem per cada petició
 $portalsCtrl = new PortalsController();
 $menusCtrl = new MenusController();
+$menusSvc = new MenusService();
 
 
 $tokenValidation = function(array $token) {
@@ -32,14 +34,13 @@ $auth = new AuthService($tokenValidation);
 
 $router = new Router($auth);
 
-$functionValidacioPortalMenu = function($request, $matches) use ($auth) {
+$functionValidacioPortalMenu = function($request, $matches) use ($auth,$menusSvc) {
     // Validar dos permisos distintos:
-    $okPortal = $auth->hasPermission('portals', $matches['id'] ?? null);
+    $vIdPortal = $matches['id'] ?? null;
+    $vIdMenu = $matches['idMenu'] ?? null;
 
-    //tinc de revisar si tinc permisos al pare
-//    $okMenu   = $auth->hasPermission('menus', $matches['id'] ?? null, $matches['idMenu'] ?? null);
-    $okMenu = true;
-    return $okPortal && $okMenu;
+    $okMenu = $menusSvc->validarMenuPermis($auth->currentUser['permisos'] ?? [],$vIdPortal,$vIdMenu);
+    return $okMenu;
 };
 
 //'permission_validator' => function($request, $matches) use ($auth) {
@@ -67,7 +68,7 @@ $router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}', [$menusCtrl, 'ge
 );
 $router->register('GET', $arrel.'/portals/{id}/menus', [$menusCtrl, 'getByPortal'],
     ['auth' => true, 'permission' => "menus",
-            'permission_validator' => $functionValidacioPortalMenu
+        'permission_validator' => $functionValidacioPortalMenu
     ]
 );
 //

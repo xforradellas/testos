@@ -212,4 +212,27 @@ class MenusModel extends Model
     {
         return PortalsModel::getI18nByPortal($vIdPortal);
     }
+
+    public static function validarPermisos(int $vIdPortal,int $vId,string $vIdsPermisos)
+    {
+        $instance = static::createInstance();
+        $aSentencies = [
+            "0" => [
+                "query" =>
+                    "SELECT
+                        tePermisMenu_f(id,:idsPermisos) as permis
+                    FROM menus m
+                    WHERE
+                        id = :id AND
+                        id_portal = :idPortal
+                        AND data_baixa is null",
+                "params" => [
+                    ":id" => $vId,
+                    ":idPortal" => $vIdPortal,
+                    ":idsPermisos" => $vIdsPermisos,
+                ]
+            ]
+        ];
+        return $instance->db->execute($aSentencies)[0][0] ?? null;
+    }
 }
