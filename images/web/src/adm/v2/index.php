@@ -43,14 +43,6 @@ $functionValidacioPortalMenu = function($request, $matches) use ($auth,$menusSvc
     return $okMenu;
 };
 
-//'permission_validator' => function($request, $matches) use ($auth) {
-//    // Validar dos permisos distintos:
-//    $okPortal = $auth->hasPermission('portal', $matches['id'] ?? null);
-//    $okHost   = $auth->hasPermission('portalroot', $matches['idhost'] ?? null);
-//
-//    return $okPortal && $okHost;
-//}
-
 
 
 // Definició de rutes (estructura jeràrquica)
@@ -62,14 +54,11 @@ $router->register('PUT', $arrel.'/portals/{id}', [$portalsCtrl, 'update'], ['aut
 $router->register('DELETE', $arrel.'/portals/{id}', [$portalsCtrl, 'delete'], ['auth' => true, 'permission' => "portals"]);
 
 // Menus
-$router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}', [$menusCtrl, 'getById'], ['auth' => true, 'permission' => "menus",
-    'permission_validator' => $functionValidacioPortalMenu
-    ]
+$router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}', [$menusCtrl, 'getById'],
+    ['auth' => true, 'permission' => "menus",'permission_validator' => $functionValidacioPortalMenu]
 );
 $router->register('GET', $arrel.'/portals/{id}/menus', [$menusCtrl, 'getByPortal'],
-    ['auth' => true, 'permission' => "menus",
-        'permission_validator' => $functionValidacioPortalMenu
-    ]
+    ['auth' => true, 'permission' => "menus", 'permission_validator' => $functionValidacioPortalMenu]
 );
 //
 //
