@@ -60,6 +60,12 @@ $router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}', [$menusCtrl, 'ge
 $router->register('GET', $arrel.'/portals/{id}/menus', [$menusCtrl, 'getByPortal'],
     ['auth' => true, 'permission' => "menus", 'permission_validator' => $functionValidacioPortalMenu]
 );
+$router->register('POST', $arrel.'/portals/{id}/menus', [$menusCtrl, 'add'],
+    ['auth' => true, 'permission' => "menus", 'permission_validator' => $functionValidacioPortalMenu]
+);
+$router->register('PUT', $arrel.'/portals/{id}/menus/{idMenu}', [$menusCtrl, 'update'],
+    ['auth' => true, 'permission' => "menus", 'permission_validator' => $functionValidacioPortalMenu]
+);
 //
 //
 //$router->register('GET', $arrel.'/portals/{id}/menus/{idMenu}/@filariadna',

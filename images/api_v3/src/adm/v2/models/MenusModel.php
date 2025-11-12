@@ -9,7 +9,7 @@ class MenusModel extends Model
     protected string $table = 'menus';
     protected string $primaryKey = 'id';
 
-    public int $id;
+    public int $id = 0;
     public int $id_portal;
     public int $ordre;
     public ?string $titol;
@@ -34,7 +34,7 @@ class MenusModel extends Model
     public ?string $copia_contingut;
     public ?string $url;
     public ?int $enllaç_extern;
-    public ?int $cercable;
+    public ?int $cercable = 1;
     public ?string $data_baixa;
     public ?string $data_mod;
     public ?string $data_mod_contingut;
@@ -234,5 +234,55 @@ class MenusModel extends Model
             ]
         ];
         return $instance->db->execute($aSentencies)[0][0] ?? null;
+    }
+
+    protected function beforeSave(): void
+    {
+        if ($this->exists()) {
+            // update
+            $aSentencies = [
+                [
+                    "query" =>
+                        "CALL ordenarMenus_p('U',:ordre, :id, :id_pare)",
+                    "params" => [
+                        ":ordre" => $this->ordre,
+                        ":id" => $this->id,
+                        ":id_pare" => $this->menu_pare,
+                    ]
+                ]
+            ];
+
+        } else {
+            // insert
+            $aSentencies = [
+                [
+                    "query" =>
+                        "CALL ordenarMenus_p('A',:ordre, :id, :id_pare)",
+                    "params" => [
+                        ":ordre" => $this->ordre,
+                        ":id" => 0,
+                        ":id_pare" => $this->menu_pare,
+                    ]
+                ]
+            ];
+
+        }
+
+        $this->db->execute($aSentencies);
+    }
+
+    protected function afterSave(): void
+    {
+        $aSentencies = [
+            [
+                "query" =>
+                    "CALL revisarFills_p(:menu_pare)",
+                "params" => [
+                    ":menu_pare" => $this->menu_pare
+                ]
+            ]
+        ];
+
+        $this->db->execute($aSentencies);
     }
 }
