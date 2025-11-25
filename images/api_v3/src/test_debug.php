@@ -1,7 +1,7 @@
 <?php
 namespace Ajt\Test;
 
-require_once 'vendor/autoload.php';
+require_once '../vendor/autoload.php';
 
 use Ajt\Debug\Debug;
 

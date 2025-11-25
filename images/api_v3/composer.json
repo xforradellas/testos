@@ -32,9 +32,14 @@
         {
           "type": "vcs",
           "url": "https://github.com/AjManresa/lib_apibase.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/AjManresa/lib_webapi.git"
         }
     ],
     "require": {
+        "ajt/webapi": "^2.0.0",
         "ajt/api-base": "^2.0.0"
     },
     "require-dev": {
