@@ -7,9 +7,9 @@ use \Ajt\Test\WebApi\WebPubApi;
 
 $oObj = new WebPubApi();
 try {
-    $dades = $oObj->getPortal("www.manresacultura.cat/casino");
-} catch (Exception $e) {
-    echo "Error: ".$e->getMessage();
+    $dades = $oObj->getPortal("www.manresacultur.cat/casino");
+} catch (\Throwable $e) {
+    echo $e->getMessage();
     exit;
 }
 
